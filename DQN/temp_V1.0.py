@@ -16,6 +16,8 @@ import os
 import time
 from dataclasses import dataclass
 from contextlib import contextmanager
+import json
+from datetime import datetime
 
 
 # 配置类
@@ -38,6 +40,9 @@ class TrainingConfig:
     useSimpleResNet: bool = True
     trainingEpisodes: int = 1000
     targetAverageReward: float = 15.0
+    saveImages: bool = True
+    imageSaveDir: str = "recordedPongEpisodes"
+    numEpisodesToRecord: int = 2
 
 
 # 设置设备
@@ -269,6 +274,151 @@ class AtariEnvironmentPreprocessor:
         self.environment.close()
 
 
+class EnvironmentRecorder:
+    """环境记录器，用于保存原始环境数据为PNG图片"""
+
+    def __init__(self, config: TrainingConfig):
+        self.config = config
+        self.environment = gym.make(config.environmentName, render_mode='rgb_array')
+        self.setupSaveDirectory()
+        self.episodeMetadata = []
+
+    def setupSaveDirectory(self):
+        """创建保存目录和子目录"""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.saveDir = f"{self.config.imageSaveDir}_{timestamp}"
+        os.makedirs(self.saveDir, exist_ok=True)
+
+        # 创建episodes子目录
+        self.episodesDir = os.path.join(self.saveDir, "episodes")
+        os.makedirs(self.episodesDir, exist_ok=True)
+
+        logger.info(f"环境数据将保存到: {self.saveDir}")
+
+    def preprocessFrame(self, frame):
+        """预处理帧 - 这里保存原始帧，不进行灰度化等处理"""
+        return frame
+
+    def saveFrameWithInfo(self, frame, episode, step, action, reward, terminated, truncated, info):
+        """保存帧图像和相关信息"""
+        try:
+            # 预处理帧
+            processedFrame = self.preprocessFrame(frame)
+
+            # 确保数据格式正确
+            if processedFrame.dtype != np.uint8:
+                processedFrame = np.clip(processedFrame * 255, 0, 255).astype(np.uint8)
+
+            # 创建PIL图像
+            img = Image.fromarray(processedFrame)
+
+            # 构建文件名和路径
+            episodeDir = os.path.join(self.episodesDir, f"episode_{episode:04d}")
+            os.makedirs(episodeDir, exist_ok=True)
+
+            filename = f"step_{step:04d}_action_{action}_reward_{reward:.1f}.png"
+            filepath = os.path.join(episodeDir, filename)
+
+            # 保存图像
+            img.save(filepath)
+
+            # 保存帧信息到元数据
+            frameInfo = {
+                'episode': episode,
+                'step': step,
+                'action': int(action),
+                'reward': float(reward),
+                'terminated': bool(terminated),
+                'truncated': bool(truncated),
+                'filename': filename,
+                'timestamp': datetime.now().isoformat()
+            }
+            if info:
+                frameInfo.update(info)  # 添加环境返回的info
+
+            return frameInfo
+        except Exception as e:
+            logger.error(f"保存帧信息失败: {e}")
+            return None
+
+    def recordEpisode(self, episodeNum, maxSteps=1000):
+        """记录一个完整的episode"""
+        try:
+            state, info = self.environment.reset()
+            episodeFrames = []
+            totalReward = 0
+
+            episodeDir = os.path.join(self.episodesDir, f"episode_{episodeNum:04d}")
+            os.makedirs(episodeDir, exist_ok=True)
+
+            for step in range(maxSteps):
+                # 随机动作
+                action = self.environment.action_space.sample()
+
+                nextState, reward, terminated, truncated, info = self.environment.step(action)
+
+                # 保存当前帧和相关信息
+                frameInfo = self.saveFrameWithInfo(
+                    state, episodeNum, step, action, reward, terminated, truncated, info
+                )
+                if frameInfo:
+                    episodeFrames.append(frameInfo)
+
+                # 更新状态
+                state = nextState
+                totalReward += reward
+
+                # 检查是否结束
+                if terminated or truncated:
+                    break
+
+            # 保存episode的元数据
+            episodeMetadata = {
+                'episodeNumber': episodeNum,
+                'totalReward': totalReward,
+                'totalSteps': step + 1,
+                'frames': episodeFrames,
+                'environment': self.config.environmentName,
+                'timestamp': datetime.now().isoformat()
+            }
+
+            metadataFile = os.path.join(episodeDir, "metadata.json")
+            with open(metadataFile, 'w') as f:
+                json.dump(episodeMetadata, f, indent=2)
+
+            self.episodeMetadata.append(episodeMetadata)
+            logger.info(f"Episode {episodeNum}: {step + 1} 步, 总奖励: {totalReward}")
+
+            return totalReward
+        except Exception as e:
+            logger.error(f"记录episode失败: {e}")
+            return 0.0
+
+    def saveSummary(self):
+        """保存所有episode的摘要信息"""
+        try:
+            summary = {
+                'totalEpisodes': len(self.episodeMetadata),
+                'environment': self.config.environmentName,
+                'config': self.config.__dict__,
+                'episodes': self.episodeMetadata,
+                'recordedAt': datetime.now().isoformat()
+            }
+
+            summaryFile = os.path.join(self.saveDir, "recordingSummary.json")
+            with open(summaryFile, 'w') as f:
+                json.dump(summary, f, indent=2)
+
+            logger.info(f"摘要已保存到: {summaryFile}")
+        except Exception as e:
+            logger.error(f"保存摘要失败: {e}")
+
+    def close(self):
+        """关闭环境并保存摘要"""
+        self.saveSummary()
+        self.environment.close()
+
+
 class ResidualBlock(nn.Module):
     """修复的残差块，确保尺寸匹配"""
 
@@ -372,57 +522,6 @@ class FixedResNetDeepQNetwork(nn.Module):
         return x
 
 
-class SimpleResNetDQN(nn.Module):
-    """简化的ResNet DQN，更稳定的架构"""
-
-    def __init__(self, inputShape: Tuple[int, int, int], numActions: int):
-        super().__init__()
-
-        # 初始卷积
-        self.conv1 = nn.Conv2d(inputShape[0], 32, kernel_size=3, stride=1, padding=1)
-        self.bn1 = nn.BatchNorm2d(32)
-
-        # 残差块
-        self.resBlock1 = self._createResBlock(32, 32)
-        self.resBlock2 = self._createResBlock(32, 64, stride=2)  # 降采样
-        self.resBlock3 = self._createResBlock(64, 64)
-        self.resBlock4 = self._createResBlock(64, 128, stride=2)  # 降采样
-
-        # 全局平均池化
-        self.globalPool = nn.AdaptiveAvgPool2d((1, 1))
-
-        # 全连接层
-        self.fc = nn.Linear(128, numActions)
-
-    def _createResBlock(self, inChannels: int, outChannels: int, stride: int = 1) -> nn.Module:
-        """创建残差块"""
-        return nn.Sequential(
-            nn.Conv2d(inChannels, outChannels, kernel_size=3, stride=stride, padding=1, bias=False),
-            nn.BatchNorm2d(outChannels),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(outChannels, outChannels, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(outChannels)
-        )
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """前向传播"""
-        # 初始卷积
-        x = F.relu(self.bn1(self.conv1(x)))
-
-        # 残差块
-        x = self.resBlock1(x) + x  # 残差连接
-        x = self.resBlock2(x)
-        x = self.resBlock3(x) + x  # 残差连接
-        x = self.resBlock4(x)
-
-        # 全局池化和输出
-        x = self.globalPool(x)
-        x = x.view(x.size(0), -1)
-        x = self.fc(x)
-
-        return x
-
-
 class MemoryManager:
     """内存管理器，用于监控和优化内存使用"""
 
@@ -457,15 +556,9 @@ class DeepQNAgent:
         self.stateShape = stateShape
         self.config = config
 
-        # 初始化网络 - 使用修复的架构
-        if config.useSimpleResNet:
-            self.policyNetwork = SimpleResNetDQN(stateShape, numActions).to(device)
-            self.targetNetwork = SimpleResNetDQN(stateShape, numActions).to(device)
-            logger.info("使用简化的ResNet架构")
-        else:
-            self.policyNetwork = FixedResNetDeepQNetwork(stateShape, numActions).to(device)
-            self.targetNetwork = FixedResNetDeepQNetwork(stateShape, numActions).to(device)
-            logger.info("使用完整的ResNet架构")
+        self.policyNetwork = FixedResNetDeepQNetwork(stateShape, numActions).to(device)
+        self.targetNetwork = FixedResNetDeepQNetwork(stateShape, numActions).to(device)
+        logger.info("使用完整的ResNet架构")
 
         self._updateTargetNetwork()
         self.targetNetwork.eval()
@@ -667,8 +760,32 @@ class DQNTrainer:
                 logger.error(f"回退环境也失败: {e2}")
                 raise
 
+    def recordInitialEpisodes(self) -> None:
+        """在训练之前记录原始环境数据为PNG图片"""
+        if not self.config.saveImages:
+            logger.info("图像保存功能已禁用，跳过环境记录")
+            return
+
+        logger.info("开始记录原始环境数据为PNG图片...")
+        recorder = EnvironmentRecorder(self.config)
+
+        try:
+            # 记录指定数量的episode
+            for episode in range(self.config.numEpisodesToRecord):
+                logger.info(f"记录第 {episode + 1}/{self.config.numEpisodesToRecord} 个episode...")
+                recorder.recordEpisode(episode, maxSteps=500)
+
+            logger.info(f"环境记录完成！所有帧已保存到: {recorder.saveDir}")
+        except Exception as e:
+            logger.error(f"环境记录过程中发生错误: {e}")
+        finally:
+            recorder.close()
+
     def train(self) -> Tuple[DeepQNAgent, List[float], List[float]]:
         """训练DQN智能体 - GPU加速版本"""
+        # 首先记录原始环境数据
+        self.recordInitialEpisodes()
+
         if self.preprocessedEnvironment is None:
             self.initializeEnvironment()
 
@@ -853,7 +970,10 @@ def main():
         config = TrainingConfig(
             environmentName="PongNoFrameskip-v4",
             trainingEpisodes=1000,
-            useSimpleResNet=True
+            useSimpleResNet=True,
+            saveImages=True,
+            imageSaveDir="recordedPongEpisodes",
+            numEpisodesToRecord=2
         )
 
         logger.info("使用GPU加速的经验回放缓冲区 - 注意监控GPU显存使用!")
