@@ -28,7 +28,7 @@ class TrainingConfig:
     learningRate: float = 0.00025
     discountFactor: float = 0.99
     batchSize: int = 32
-    replayBufferCapacity: int = 30000
+    replayBufferCapacity: int = 3000
     targetUpdateFrequency: int = 1000
     learningStartSteps: int = 1000
     learningUpdateFrequency: int = 4
@@ -430,7 +430,7 @@ class ResidualBlock(nn.Module):
         self.conv2 = nn.Conv2d(outChannels, outChannels, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(outChannels)
 
-        # 修复的快捷连接 - 确保尺寸匹配
+        # 快捷连接 - 确保尺寸匹配
         self.shortcut = nn.Sequential()
         if stride != 1 or inChannels != outChannels:
             self.shortcut = nn.Sequential(
@@ -453,8 +453,8 @@ class ResidualBlock(nn.Module):
         return out
 
 
-class FixedResNetDeepQNetwork(nn.Module):
-    """修复的ResNet DQN网络，确保所有尺寸匹配"""
+class ResNetDeepQNetwork(nn.Module):
+    """ResNet DQN网络"""
 
     def __init__(self, inputShape: Tuple[int, int, int], numActions: int):
         super().__init__()
@@ -556,8 +556,8 @@ class DeepQNAgent:
         self.stateShape = stateShape
         self.config = config
 
-        self.policyNetwork = FixedResNetDeepQNetwork(stateShape, numActions).to(device)
-        self.targetNetwork = FixedResNetDeepQNetwork(stateShape, numActions).to(device)
+        self.policyNetwork = ResNetDeepQNetwork(stateShape, numActions).to(device)
+        self.targetNetwork = ResNetDeepQNetwork(stateShape, numActions).to(device)
         logger.info("使用完整的ResNet架构")
 
         self._updateTargetNetwork()
