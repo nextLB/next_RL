@@ -49,7 +49,7 @@ class TrainingConfig:
     targetAverageReward: float = 15.0
     saveImages: bool = True
     imageSaveDir: str = "recordedPongEpisodes"
-    numEpisodesToRecord: int = 2
+    numEpisodesToRecord: int = 10
 
 
 # 设置设备

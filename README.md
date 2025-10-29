@@ -58,9 +58,16 @@
     pip install grpcio==1.76.0
     pip install gym-notices==0.1.0
 
+
+
+
 ## V1.0版本
 
 在V1.0版本中，初步实现了DQN的模型训练与搭建
 
+### 对于DQN的详细实现，请见DQN文件夹下的程序
+
+    V1.0.py是完整的基于"PongNoFrameskip-v4"的强化学习模型训练程序
+    comprehend_V1_0.py是便于使用者逐步去理解V1.0版本的基于"PongNoFrameskip-v4"的强化学习模型训练程序
 
 
