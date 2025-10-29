@@ -16,7 +16,7 @@ import gymnasium as gym
 import matplotlib.pyplot as plt
 from PIL import Image
 import logging
-from typing import Tuple, List, Dict, Any, Optional
+from typing import Tuple, List, Dict, Any
 import gc
 import psutil
 import os
@@ -34,14 +34,14 @@ class TrainingConfig:
     environmentName: str = "PongNoFrameskip-v4"
     learningRate: float = 0.00025
     discountFactor: float = 0.99
-    batchSize: int = 32
-    replayBufferCapacity: int = 3000
+    batchSize: int = 128
+    replayBufferCapacity: int = 30000
     targetUpdateFrequency: int = 1000
-    learningStartSteps: int = 1000
+    learningStartSteps: int = 30000
     learningUpdateFrequency: int = 4
     initialEpsilon: float = 1.0
     finalEpsilon: float = 0.1
-    epsilonDecaySteps: int = 50000
+    epsilonDecaySteps: int = 100000
     frameSkip: int = 4
     screenSize: int = 84
     useSimpleResNet: bool = True
@@ -597,6 +597,7 @@ class DeepQNAgent:
                 epsilon = 0.01
 
             self.stepsCompleted += 1
+
 
             if randomValue > epsilon:
                 with torch.no_grad():
