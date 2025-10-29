@@ -34,10 +34,10 @@ class TrainingConfig:
     environmentName: str = "PongNoFrameskip-v4"
     learningRate: float = 0.00025
     discountFactor: float = 0.99
-    batchSize: int = 128
-    replayBufferCapacity: int = 30000
+    batchSize: int = 16
+    replayBufferCapacity: int = 10000
     targetUpdateFrequency: int = 1000
-    learningStartSteps: int = 30000
+    learningStartSteps: int = 10000
     learningUpdateFrequency: int = 4
     initialEpsilon: float = 1.0
     finalEpsilon: float = 0.1
