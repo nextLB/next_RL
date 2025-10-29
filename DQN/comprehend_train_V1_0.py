@@ -1,8 +1,6 @@
 """
-    依照本目录的paper目录下的DQNNaturePaper篇文章进行训练的，与原论文在架构方面有一些改动的
+    理解V1.0.py程序的程序文件
 """
-
-# V1.0  2025.10.28      --- by next, 初步实现了使用Renet深度学习模型架构的DQN强化学习模型的搭建与训练等
 
 
 import torch
@@ -16,7 +14,7 @@ import gymnasium as gym
 import matplotlib.pyplot as plt
 from PIL import Image
 import logging
-from typing import Tuple, List, Dict, Any, Optional
+from typing import Tuple, List, Dict, Any
 import gc
 import psutil
 import os
@@ -27,29 +25,78 @@ import json
 from datetime import datetime
 
 
-# 配置类
 @dataclass
 class TrainingConfig:
-    """训练配置参数"""
+    """训练配置参数 - 用于深度强化学习算法（如DQN）的配置"""
+
+    # 环境配置
     environmentName: str = "PongNoFrameskip-v4"
+    # 使用的强化学习环境名称，PongNoFrameskip-v4是Atari乒乓球游戏的无跳帧版本
+
+    # 优化器参数
     learningRate: float = 0.00025
+    # 神经网络优化器的学习率，控制参数更新的步长大小
+
+    # 强化学习核心参数
     discountFactor: float = 0.99
+    # 折扣因子γ，权衡当前奖励与未来奖励的重要性，0.99表示更重视长期回报
+
+    # 训练批次参数
     batchSize: int = 32
-    replayBufferCapacity: int = 3000
+    # 每次从经验回放缓冲区中采样的样本数量
+
+    # 经验回放配置
+    replayBufferCapacity: int = 50000
+    # 经验回放缓冲区的最大容量，存储过去的(state, action, reward, next_state, done)元组
+
+    # 目标网络配置
     targetUpdateFrequency: int = 1000
+    # 目标网络更新的频率（每隔多少步更新一次），用于稳定训练
+
+    # 学习启动配置
     learningStartSteps: int = 1000
+    # 在开始训练前先收集多少步的经验数据填充回放缓冲区
+
     learningUpdateFrequency: int = 4
+    # 学习更新的频率（每隔多少步进行一次梯度更新）
+
+    # ε-贪婪策略参数（探索-利用权衡）
     initialEpsilon: float = 1.0
+    # 初始探索率，1.0表示完全随机探索
+
     finalEpsilon: float = 0.1
+    # 最终探索率，0.1表示10%的概率进行随机探索
+
     epsilonDecaySteps: int = 50000
+    # ε从初始值衰减到最终值所需的步数
+
+    # 环境预处理参数
     frameSkip: int = 4
+    # 跳帧数量，每4帧执行一次动作，中间帧重复相同动作，减少计算量
+
     screenSize: int = 84
+    # 预处理后输入神经网络的图像尺寸（84x84像素）
+
+    # 网络架构选择
     useSimpleResNet: bool = True
+    # 是否使用简化的ResNet架构，True使用ResNet，False可能使用普通CNN
+
+    # 训练周期配置
     trainingEpisodes: int = 1000
+    # 总训练回合数，每个回合从环境开始到结束
+
     targetAverageReward: float = 15.0
+    # 目标平均奖励值，用于判断训练是否成功
+
+    # 记录和可视化配置
     saveImages: bool = True
+    # 是否保存游戏过程的图像，用于后续分析或可视化
+
     imageSaveDir: str = "recordedPongEpisodes"
+    # 保存游戏图像的目录名称
+
     numEpisodesToRecord: int = 10
+    # 记录图像的游戏回合数量
 
 
 # 设置设备
@@ -330,16 +377,32 @@ class EnvironmentRecorder:
             img.save(filepath)
 
             # 保存帧信息到元数据
+            ######################################
+            ######################################
+            ######################################
+            #     关于帧数据的保存格式与字段的解释      #
+            # 关于动作系统    action
+            #   0:NOOP  -   无操作
+            #   1:FIRE  -   发球
+            #   2:RIGHT -   向右移动
+            #   3:LEFT  -   向左移动
+            #   4:RIGHTFIRE -   向右移动并发球
+            #   5:LEFTFIRE  -   向左移动并发球
+            ######################################
+            ######################################
+            ######################################
             frameInfo = {
-                'episode': episode,
-                'step': step,
-                'action': int(action),
-                'reward': float(reward),
-                'terminated': bool(terminated),
-                'truncated': bool(truncated),
-                'filename': filename,
-                'timestamp': datetime.now().isoformat()
+                'episode': episode,             # 回合编号
+                'step': step,                   # 当前步数(从0开始)
+                'action': int(action),          # 执行的动作编号
+                'reward': float(reward),        # 这一步获得的奖励
+                'terminated': bool(terminated), # 是否终止（游戏结束）
+                'truncated': bool(truncated),   # 是否被截断（时间限制等）
+                'filename': filename,           # 保存的截图文件名
+                'timestamp': datetime.now().isoformat()     # 时间戳
             }
+
+            # 加入info中剩余的信息
             if info:
                 frameInfo.update(info)  # 添加环境返回的info
 
@@ -379,11 +442,11 @@ class EnvironmentRecorder:
                 if terminated or truncated:
                     break
 
-            # 保存episode的元数据
+            # 保存episode的总体元数据
             episodeMetadata = {
                 'episodeNumber': episodeNum,
                 'totalReward': totalReward,
-                'totalSteps': step + 1,
+                'totalSteps': maxSteps,
                 'frames': episodeFrames,
                 'environment': self.config.environmentName,
                 'timestamp': datetime.now().isoformat()
@@ -563,7 +626,9 @@ class DeepQNAgent:
         self.stateShape = stateShape
         self.config = config
 
+        # 模型训练一直都是在优化policyNetwork模型参数
         self.policyNetwork = ResNetDeepQNetwork(stateShape, numActions).to(device)
+        # 而这个targetNetwork只是会定期复制policyNetwork的模型参数
         self.targetNetwork = ResNetDeepQNetwork(stateShape, numActions).to(device)
         logger.info("使用完整的ResNet架构")
 
@@ -871,7 +936,7 @@ class DQNTrainer:
                 if movingAverage > bestAverageReward and len(episodeRewards) >= 20:
                     bestAverageReward = movingAverage
                     self.agent.saveCheckpoint(
-                        f"gpu_resnet_dqn_best_{self.config.environmentName.replace('/', '_')}.pth"
+                        f"./DQN_V1_0_models/gpu_resnet_dqn_best_{self.config.environmentName.replace('/', '_')}.pth"
                     )
 
                 # 定期日志输出
@@ -891,7 +956,7 @@ class DQNTrainer:
                     # 定期保存检查点
                     if episode % 50 == 0 and episode > 0:
                         self.agent.saveCheckpoint(
-                            f"gpu_resnet_dqn_checkpoint_{self.config.environmentName.replace('/', '_')}_episode_{episode}.pth"
+                            f"./DQN_V1_0_models/gpu_resnet_dqn_checkpoint_{self.config.environmentName.replace('/', '_')}_episode_{episode}.pth"
                         )
 
                 # 检查停止条件
@@ -899,7 +964,7 @@ class DQNTrainer:
                         movingAverageRewards[-1] >= self.config.targetAverageReward):
                     logger.info(f"达到目标性能! 在回合 {episode}")
                     self.agent.saveCheckpoint(
-                        f"gpu_resnet_dqn_final_{self.config.environmentName.replace('/', '_')}.pth"
+                        f"./DQN_V1_0_models/gpu_resnet_dqn_final_{self.config.environmentName.replace('/', '_')}.pth"
                     )
                     break
 
@@ -974,14 +1039,7 @@ def main():
             torch.backends.cudnn.benchmark = True
 
         # 训练配置
-        config = TrainingConfig(
-            environmentName="PongNoFrameskip-v4",
-            trainingEpisodes=1000,
-            useSimpleResNet=True,
-            saveImages=True,
-            imageSaveDir="recordedPongEpisodes",
-            numEpisodesToRecord=2
-        )
+        config = TrainingConfig()
 
         logger.info("使用GPU加速的经验回放缓冲区 - 注意监控GPU显存使用!")
 
@@ -1009,4 +1067,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
 
