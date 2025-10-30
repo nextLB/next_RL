@@ -76,4 +76,4 @@
 ### 对于PPO的详细实现，请见PPO文件夹下的程序
 
     train_V1_0.py是完整的基于"PongNoFrameskip-v4"的强化学习模型训练程序
-
+    inference_V1_0.py是基于实时的环境进行强化学习模型的推理与可视化的程序等
