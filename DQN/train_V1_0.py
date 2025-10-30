@@ -40,7 +40,7 @@ class TrainingConfig:
     learningStartSteps: int = 10000
     learningUpdateFrequency: int = 4
     initialEpsilon: float = 1.0
-    finalEpsilon: float = 0.1
+    finalEpsilon: float = 0.01
     epsilonDecaySteps: int = 100000
     frameSkip: int = 4
     screenSize: int = 84

@@ -64,7 +64,7 @@ class TrainingConfig:
     initialEpsilon: float = 1.0
     # 初始探索率，1.0表示完全随机探索
 
-    finalEpsilon: float = 0.1
+    finalEpsilon: float = 0.01
     # 最终探索率，0.1表示10%的概率进行随机探索
 
     epsilonDecaySteps: int = 50000
