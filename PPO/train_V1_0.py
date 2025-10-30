@@ -1,9 +1,8 @@
 """
-    依照本目录的paper目录下的DQNNaturePaper篇文章进行训练的，与原论文在架构方面有一些改动的
+    PPO (Proximal Policy Optimization) 算法实现
+    基于原DQN代码框架，按照PPO论文完整复现
+    V1.0 2025.10.28 - PPO实现
 """
-
-# V1.0  2025.10.28      --- by next, 初步实现了使用Renet深度学习模型架构的DQN强化学习模型的搭建与训练等
-
 
 import torch
 import torch.nn as nn
@@ -16,7 +15,7 @@ import gymnasium as gym
 import matplotlib.pyplot as plt
 from PIL import Image
 import logging
-from typing import Tuple, List, Dict, Any
+from typing import Tuple, List, Dict, Any, Optional
 import gc
 import psutil
 import os
@@ -27,29 +26,31 @@ import json
 from datetime import datetime
 
 
-# 配置类
+# 配置类 - PPO专用
 @dataclass
-class TrainingConfig:
-    """训练配置参数"""
+class PPOConfig:
+    """PPO训练配置参数"""
     environmentName: str = "PongNoFrameskip-v4"
     learningRate: float = 0.00025
+    clipEpsilon: float = 0.1
     discountFactor: float = 0.99
-    batchSize: int = 16
-    replayBufferCapacity: int = 10000
-    targetUpdateFrequency: int = 3000
-    learningStartSteps: int = 10000
-    learningUpdateFrequency: int = 4
-    initialEpsilon: float = 1.0
-    finalEpsilon: float = 0.1
-    epsilonDecaySteps: int = 100000
+    gaeLambda: float = 0.95
+    valueLossCoeff: float = 0.5
+    entropyCoeff: float = 0.01
+    ppoEpochs: int = 3
+    batchSize: int = 32
+    horizon: int = 128  # 每个actor的时间步数
+    numActors: int = 8  # 并行actor数量
+    trainingTimesteps: int = 10000000
+    targetAverageReward: float = 15.0
     frameSkip: int = 4
     screenSize: int = 84
-    useSimpleResNet: bool = True
-    trainingEpisodes: int = 1000
-    targetAverageReward: float = 15.0
     saveImages: bool = True
-    imageSaveDir: str = "recordedPongEpisodes"
+    imageSaveDir: str = "recordedPongPPO"
     numEpisodesToRecord: int = 3
+    useAdam: bool = True
+    adamEpsilon: float = 1e-5
+    maxGradNorm: float = 0.5
 
 
 # 设置设备
@@ -61,7 +62,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('./log/dqn_resnet_gpu_memory.log'),
+        logging.FileHandler('./log/ppo_resnet_gpu_memory.log'),
         logging.StreamHandler()
     ]
 )
@@ -91,110 +92,95 @@ def memoryMonitor(operationName: str):
         )
 
 
-# 经验回放缓冲区
-Experience = namedtuple('Experience', ['state', 'action', 'reward', 'nextState', 'done'])
+# 经验回放缓冲区 - PPO专用
+PPOExperience = namedtuple('PPOExperience',
+                           ['state', 'action', 'reward', 'value', 'log_prob', 'done'])
 
 
-class ExperienceReplayBuffer:
-    """GPU加速的经验回放缓冲区"""
+class PPOBuffer:
+    """PPO专用的经验缓冲区"""
 
-    def __init__(self, capacity: int):
-        self.buffer = deque(maxlen=capacity)
-        self.capacity = capacity
-        self.gpuMemoryWarningIssued = False
+    def __init__(self, horizon: int, num_actors: int, state_shape: Tuple[int, int, int]):
+        self.horizon = horizon
+        self.num_actors = num_actors
+        self.state_shape = state_shape
 
-    def push(self, state: torch.Tensor, action: int, reward: float, nextState: torch.Tensor, done: bool) -> None:
+        # 初始化缓冲区
+        self.states = torch.zeros((horizon, num_actors) + state_shape)
+        self.actions = torch.zeros((horizon, num_actors), dtype=torch.long)
+        self.rewards = torch.zeros((horizon, num_actors))
+        self.values = torch.zeros((horizon, num_actors))
+        self.log_probs = torch.zeros((horizon, num_actors))
+        self.dones = torch.zeros((horizon, num_actors), dtype=torch.bool)
+
+        self.advantages = torch.zeros((horizon, num_actors))
+        self.returns = torch.zeros((horizon, num_actors))
+
+        self.step = 0
+
+    def push(self, state: torch.Tensor, action: torch.Tensor, reward: torch.Tensor,
+             value: torch.Tensor, log_prob: torch.Tensor, done: torch.Tensor):
         """添加经验到缓冲区"""
-        with memoryMonitor("经验回放缓冲区添加"):
-            try:
-                # 确保状态在GPU上以加速训练
-                stateGpu = state.to(device) if not state.is_cuda else state
-                nextStateGpu = nextState.to(device) if not nextState.is_cuda else nextState
+        self.states[self.step] = state.cpu()
+        self.actions[self.step] = action.cpu()
+        self.rewards[self.step] = reward.cpu()
+        self.values[self.step] = value.cpu()
+        self.log_probs[self.step] = log_prob.cpu()
+        self.dones[self.step] = done.cpu()
 
-                self.buffer.append(Experience(stateGpu, action, reward, nextStateGpu, done))
+        self.step += 1
 
-                # 内存使用监控
-                if len(self.buffer) % 1000 == 0:
-                    self._checkMemoryUsage()
+    def compute_advantages_and_returns(self, last_values: torch.Tensor, gamma: float = 0.99, gae_lambda: float = 0.95):
+        """计算优势函数和回报"""
+        advantages = torch.zeros_like(self.rewards)
+        returns = torch.zeros_like(self.rewards)
 
-            except torch.cuda.OutOfMemoryError as e:
-                logger.warning(f"GPU显存不足，回退到CPU存储: {e}")
-                # 回退到CPU存储
-                stateCpu = state.cpu() if state.is_cuda else state
-                nextStateCpu = nextState.cpu() if nextState.is_cuda else nextState
-                self.buffer.append(Experience(stateCpu, action, reward, nextStateCpu, done))
+        last_advantage = 0
+        for t in reversed(range(self.horizon)):
+            if t == self.horizon - 1:
+                next_value = last_values
+                next_non_terminal = 1.0 - self.dones[t].float()
+            else:
+                next_value = self.values[t + 1]
+                next_non_terminal = 1.0 - self.dones[t].float()
 
-            except Exception as e:
-                logger.error(f"添加经验到缓冲区失败: {e}")
+            delta = self.rewards[t] + gamma * next_value * next_non_terminal - self.values[t]
+            advantages[t] = last_advantage = delta + gamma * gae_lambda * next_non_terminal * last_advantage
 
-    def sample(self, batchSize: int) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        """从缓冲区中随机采样一批经验"""
-        if len(self.buffer) < batchSize:
-            raise ValueError(f"缓冲区中经验数量不足: {len(self.buffer)} < {batchSize}")
+        returns = advantages + self.values
+        # 标准化优势函数
+        advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
 
-        with memoryMonitor("经验回放缓冲区采样"):
-            try:
-                experiences = random.sample(self.buffer, batchSize)
+        self.advantages = advantages
+        self.returns = returns
 
-                # 使用列表推导式提高效率
-                states = torch.stack([exp.state for exp in experiences])
-                actions = torch.tensor([exp.action for exp in experiences], dtype=torch.long, device=device)
-                rewards = torch.tensor([exp.reward for exp in experiences], dtype=torch.float32, device=device)
-                nextStates = torch.stack([exp.nextState for exp in experiences])
-                dones = torch.tensor([exp.done for exp in experiences], dtype=torch.float32, device=device)
+    def get_batches(self, batch_size: int):
+        """生成训练批次"""
+        # 展平所有数据
+        states = self.states.view(-1, *self.state_shape)
+        actions = self.actions.view(-1)
+        old_log_probs = self.log_probs.view(-1)
+        advantages = self.advantages.view(-1)
+        returns = self.returns.view(-1)
 
-                return states, actions, rewards, nextStates, dones
+        # 随机打乱
+        indices = torch.randperm(states.size(0))
 
-            except torch.cuda.OutOfMemoryError as e:
-                logger.error(f"采样时GPU显存不足: {e}")
-                self._emergencyMemoryCleanup()
-                raise
+        for start_idx in range(0, states.size(0), batch_size):
+            end_idx = min(start_idx + batch_size, states.size(0))
+            batch_indices = indices[start_idx:end_idx]
 
-            except Exception as e:
-                logger.error(f"采样经验失败: {e}")
-                raise
+            yield (
+                states[batch_indices].to(device),
+                actions[batch_indices].to(device),
+                old_log_probs[batch_indices].to(device),
+                advantages[batch_indices].to(device),
+                returns[batch_indices].to(device)
+            )
 
-    def _checkMemoryUsage(self):
-        """检查GPU内存使用情况"""
-        if torch.cuda.is_available():
-            allocated = torch.cuda.memory_allocated() / 1024 ** 3
-            if allocated > 4.0 and not self.gpuMemoryWarningIssued:
-                logger.warning(f"GPU内存使用较高: {allocated:.2f} GB")
-                self.gpuMemoryWarningIssued = True
-
-    def _emergencyMemoryCleanup(self):
-        """紧急内存清理"""
-        logger.warning("执行紧急内存清理...")
-        MemoryManager.clearMemory()
-
-    def __len__(self) -> int:
-        return len(self.buffer)
-
-    def getUsagePercentage(self) -> float:
-        """返回缓冲区的使用百分比"""
-        return len(self.buffer) / self.capacity * 100
-
-    def clearGpuMemory(self):
-        """清理GPU内存中的状态张量"""
-        logger.info("清理GPU内存中的经验缓冲区...")
-        # 使用列表推导式提高效率
-        cpuBuffer = deque(
-            [
-                Experience(
-                    exp.state.cpu() if exp.state.is_cuda else exp.state,
-                    exp.action,
-                    exp.reward,
-                    exp.nextState.cpu() if exp.nextState.is_cuda else exp.nextState,
-                    exp.done
-                )
-                for exp in self.buffer
-            ],
-            maxlen=self.capacity
-        )
-
-        self.buffer = cpuBuffer
-        MemoryManager.clearMemory()
-        logger.info("GPU内存清理完成")
+    def clear(self):
+        """清空缓冲区"""
+        self.step = 0
 
 
 class AtariEnvironmentPreprocessor:
@@ -284,7 +270,7 @@ class AtariEnvironmentPreprocessor:
 class EnvironmentRecorder:
     """环境记录器，用于保存原始环境数据为PNG图片"""
 
-    def __init__(self, config: TrainingConfig):
+    def __init__(self, config: PPOConfig):
         self.config = config
         self.environment = gym.make(config.environmentName, render_mode='rgb_array')
         self.setupSaveDirectory()
@@ -460,14 +446,16 @@ class ResidualBlock(nn.Module):
         return out
 
 
-class ResNetDeepQNetwork(nn.Module):
-    """ResNet DQN网络"""
+class PPONetwork(nn.Module):
+    """PPO网络 - 包含策略网络和价值网络"""
 
     def __init__(self, inputShape: Tuple[int, int, int], numActions: int):
         super().__init__()
 
         self.inChannels = 64
+        self.numActions = numActions
 
+        # 共享的特征提取层
         # 初始卷积层 - 适配84x84输入
         self.conv1 = nn.Conv2d(inputShape[0], 64, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
@@ -481,8 +469,19 @@ class ResNetDeepQNetwork(nn.Module):
         # 自适应平均池化到固定尺寸
         self.adaptiveAvgPool = nn.AdaptiveAvgPool2d((1, 1))
 
-        # 全连接层
-        self.fc = nn.Linear(512, numActions)
+        # 策略头
+        self.policyHead = nn.Sequential(
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.Linear(256, numActions)
+        )
+
+        # 价值头
+        self.valueHead = nn.Sequential(
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.Linear(256, 1)
+        )
 
         # 初始化权重
         self._initializeWeights()
@@ -510,23 +509,35 @@ class ResNetDeepQNetwork(nn.Module):
                 nn.init.normal_(module.weight, 0, 0.01)
                 nn.init.constant_(module.bias, 0)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """前向传播"""
-        # 初始卷积
+    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """前向传播 - 返回动作概率、状态价值和动作log概率"""
+        # 共享特征提取
         x = F.relu(self.bn1(self.conv1(x)))
-
-        # ResNet层
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
-
-        # 全局池化和全连接
         x = self.adaptiveAvgPool(x)
         x = x.view(x.size(0), -1)
-        x = self.fc(x)
 
-        return x
+        # 策略头
+        policy_logits = self.policyHead(x)
+        action_probs = F.softmax(policy_logits, dim=-1)
+
+        # 价值头
+        state_value = self.valueHead(x)
+
+        return action_probs, state_value.squeeze(-1), policy_logits
+
+    def get_action(self, state: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        """选择动作并返回相关信息"""
+        with torch.no_grad():
+            action_probs, state_value, policy_logits = self.forward(state)
+            dist = torch.distributions.Categorical(action_probs)
+            action = dist.sample()
+            log_prob = dist.log_prob(action)
+
+            return action, log_prob, state_value, action_probs
 
 
 class MemoryManager:
@@ -555,161 +566,139 @@ class MemoryManager:
         gc.collect()
 
 
-class DeepQNAgent:
-    """DQN智能体 - GPU加速版本"""
+class PPOAgent:
+    """PPO智能体"""
 
-    def __init__(self, stateShape: Tuple[int, int, int], numActions: int, config: TrainingConfig):
+    def __init__(self, stateShape: Tuple[int, int, int], numActions: int, config: PPOConfig):
         self.numActions = numActions
         self.stateShape = stateShape
         self.config = config
 
-        self.policyNetwork = ResNetDeepQNetwork(stateShape, numActions).to(device)
-        self.targetNetwork = ResNetDeepQNetwork(stateShape, numActions).to(device)
-        logger.info("使用完整的ResNet架构")
-
-        self._updateTargetNetwork()
-        self.targetNetwork.eval()
+        self.network = PPONetwork(stateShape, numActions).to(device)
 
         # 优化器
-        self.optimizer = optim.Adam(
-            self.policyNetwork.parameters(),
-            lr=config.learningRate,
-            eps=1e-4
-        )
-
-        # 经验回放缓冲区 - GPU加速版本
-        self.memory = ExperienceReplayBuffer(capacity=config.replayBufferCapacity)
+        if config.useAdam:
+            self.optimizer = optim.Adam(
+                self.network.parameters(),
+                lr=config.learningRate,
+                eps=config.adamEpsilon
+            )
+        else:
+            self.optimizer = optim.RMSprop(
+                self.network.parameters(),
+                lr=config.learningRate,
+                eps=config.adamEpsilon
+            )
 
         # 训练状态
         self.stepsCompleted = 0
         self.episodesCompleted = 0
 
-        logger.info(f"GPU加速DQN智能体初始化完成: 状态形状={stateShape}, 动作数量={numActions}")
+        logger.info(f"PPO智能体初始化完成: 状态形状={stateShape}, 动作数量={numActions}")
 
-    def selectAction(self, state: torch.Tensor, training: bool = True) -> int:
-        """根据当前状态选择动作"""
-        try:
-            randomValue = random.random()
+    def compute_loss(self, states: torch.Tensor, actions: torch.Tensor, old_log_probs: torch.Tensor,
+                     advantages: torch.Tensor, returns: torch.Tensor) -> Tuple[torch.Tensor, Dict[str, float]]:
+        """计算PPO损失"""
+        action_probs, values, policy_logits = self.network(states)
 
-            if training:
-                epsilon = self._calculateCurrentEpsilon()
-            else:
-                epsilon = 0.01
+        # 策略损失
+        dist = torch.distributions.Categorical(action_probs)
+        log_probs = dist.log_prob(actions)
+        entropy = dist.entropy().mean()
 
-            self.stepsCompleted += 1
+        ratio = torch.exp(log_probs - old_log_probs)
 
+        # PPO裁剪目标
+        surr1 = ratio * advantages
+        surr2 = torch.clamp(ratio, 1.0 - self.config.clipEpsilon, 1.0 + self.config.clipEpsilon) * advantages
+        policy_loss = -torch.min(surr1, surr2).mean()
 
-            if randomValue > epsilon:
-                with torch.no_grad():
-                    # 确保输入尺寸正确并在GPU上
-                    if len(state.shape) == 3:
-                        state = state.unsqueeze(0)  # 添加batch维度
+        # 价值损失
+        value_loss = F.mse_loss(values, returns)
 
-                    stateDevice = state.to(device) if not state.is_cuda else state
-                    qValues = self.policyNetwork(stateDevice)
-                    return qValues.max(1)[1].item()
-            else:
-                return random.randrange(self.numActions)
-        except Exception as e:
-            logger.error(f"选择动作失败: {e}")
-            return random.randrange(self.numActions)
+        # 总损失
+        total_loss = (policy_loss
+                      + self.config.valueLossCoeff * value_loss
+                      - self.config.entropyCoeff * entropy)
 
-    def optimizeModel(self) -> float:
-        """执行一次模型优化 - GPU加速版本"""
-        if (len(self.memory) < self.config.batchSize or
-                self.stepsCompleted < self.config.learningStartSteps or
-                self.stepsCompleted % self.config.learningUpdateFrequency != 0):
-            return 0.0
+        # 额外统计信息
+        clip_fraction = torch.mean((torch.abs(ratio - 1.0) > self.config.clipEpsilon).float()).item()
+        explained_variance = 1 - F.mse_loss(values, returns) / returns.var()
 
-        with memoryMonitor("模型优化"):
-            try:
-                # 采样 - 状态已经在GPU上
-                states, actions, rewards, nextStates, dones = self.memory.sample(self.config.batchSize)
+        stats = {
+            'policy_loss': policy_loss.item(),
+            'value_loss': value_loss.item(),
+            'entropy': entropy.item(),
+            'clip_fraction': clip_fraction,
+            'explained_variance': explained_variance.item(),
+            'approx_kl': (old_log_probs - log_probs).mean().item()
+        }
 
-                # 确保输入尺寸正确
-                if len(states.shape) == 3:
-                    states = states.unsqueeze(1)
-                if len(nextStates.shape) == 3:
-                    nextStates = nextStates.unsqueeze(1)
+        return total_loss, stats
 
-                # 计算当前Q值
-                currentQValues = self.policyNetwork(states).gather(1, actions.unsqueeze(1))
+    def update(self, buffer: PPOBuffer) -> Dict[str, float]:
+        """使用PPO算法更新网络"""
+        total_stats = {
+            'policy_loss': 0.0,
+            'value_loss': 0.0,
+            'entropy': 0.0,
+            'clip_fraction': 0.0,
+            'explained_variance': 0.0,
+            'approx_kl': 0.0
+        }
 
-                # 计算目标Q值
-                with torch.no_grad():
-                    nextQValues = self.targetNetwork(nextStates).max(1)[0]
-                    targetQValues = rewards + (self.config.discountFactor * nextQValues * (1 - dones))
+        num_updates = 0
 
-                # 计算损失
-                loss = F.smooth_l1_loss(currentQValues.squeeze(), targetQValues)
+        for epoch in range(self.config.ppoEpochs):
+            for batch in buffer.get_batches(self.config.batchSize):
+                states, actions, old_log_probs, advantages, returns = batch
 
-                # 优化模型
                 self.optimizer.zero_grad()
+                loss, stats = self.compute_loss(states, actions, old_log_probs, advantages, returns)
                 loss.backward()
 
                 # 梯度裁剪
-                torch.nn.utils.clip_grad_norm_(self.policyNetwork.parameters(), 10.0)
+                torch.nn.utils.clip_grad_norm_(self.network.parameters(), self.config.maxGradNorm)
                 self.optimizer.step()
 
-                # 定期更新目标网络
-                if self.stepsCompleted % self.config.targetUpdateFrequency == 0:
-                    self._updateTargetNetwork()
-                    logger.debug(f"更新目标网络，步骤: {self.stepsCompleted}")
+                # 累积统计信息
+                for key in total_stats:
+                    total_stats[key] += stats[key]
+                num_updates += 1
 
-                return loss.item()
+        # 平均统计信息
+        for key in total_stats:
+            total_stats[key] /= num_updates
 
-            except torch.cuda.OutOfMemoryError as e:
-                logger.error(f"优化模型时GPU显存不足: {e}")
-                # 紧急回退到CPU内存
-                self.memory.clearGpuMemory()
-                return 0.0
-
-            except Exception as e:
-                logger.error(f"模型优化失败: {e}")
-                return 0.0
-
-    def _calculateCurrentEpsilon(self) -> float:
-        """计算当前的epsilon值"""
-        return self.config.finalEpsilon + (self.config.initialEpsilon - self.config.finalEpsilon) * \
-            np.exp(-1.0 * self.stepsCompleted / self.config.epsilonDecaySteps)
-
-    def _updateTargetNetwork(self) -> None:
-        """更新目标网络参数"""
-        self.targetNetwork.load_state_dict(self.policyNetwork.state_dict())
-
-    def getCurrentEpsilon(self) -> float:
-        """获取当前epsilon值"""
-        return self._calculateCurrentEpsilon()
+        return total_stats
 
     def saveCheckpoint(self, filePath: str) -> None:
         """保存模型检查点"""
         try:
             checkpoint = {
-                'policyNetworkState': self.policyNetwork.state_dict(),
-                'targetNetworkState': self.targetNetwork.state_dict(),
+                'networkState': self.network.state_dict(),
                 'optimizerState': self.optimizer.state_dict(),
                 'stepsCompleted': self.stepsCompleted,
                 'episodesCompleted': self.episodesCompleted,
                 'config': self.config
             }
             torch.save(checkpoint, filePath)
-            logger.info(f"模型已保存到: {filePath}")
+            logger.info(f"PPO模型已保存到: {filePath}")
         except Exception as e:
-            logger.error(f"保存模型失败: {e}")
+            logger.error(f"保存PPO模型失败: {e}")
             raise
 
     def loadCheckpoint(self, filePath: str) -> None:
         """加载模型检查点"""
         try:
             checkpoint = torch.load(filePath, map_location=device)
-            self.policyNetwork.load_state_dict(checkpoint['policyNetworkState'])
-            self.targetNetwork.load_state_dict(checkpoint['targetNetworkState'])
+            self.network.load_state_dict(checkpoint['networkState'])
             self.optimizer.load_state_dict(checkpoint['optimizerState'])
             self.stepsCompleted = checkpoint['stepsCompleted']
             self.episodesCompleted = checkpoint['episodesCompleted']
-            logger.info(f"模型已从 {filePath} 加载")
+            logger.info(f"PPO模型已从 {filePath} 加载")
         except Exception as e:
-            logger.error(f"加载模型失败: {e}")
+            logger.error(f"加载PPO模型失败: {e}")
             raise
 
     def getTrainingStatistics(self) -> Dict[str, Any]:
@@ -720,8 +709,6 @@ class DeepQNAgent:
         return {
             'stepsCompleted': self.stepsCompleted,
             'episodesCompleted': self.episodesCompleted,
-            'currentEpsilon': self.getCurrentEpsilon(),
-            'memoryUsage': self.memory.getUsagePercentage(),
             'gpuMemoryAllocated': gpuAllocated,
             'gpuMemoryCached': gpuCached,
             'systemMemory': systemMemory,
@@ -732,14 +719,15 @@ class DeepQNAgent:
         MemoryManager.clearMemory()
 
 
-class DQNTrainer:
-    """DQN训练器 - GPU加速版本"""
+class PPOTrainer:
+    """PPO训练器"""
 
-    def __init__(self, config: TrainingConfig):
+    def __init__(self, config: PPOConfig):
         self.config = config
         self.environment = None
         self.preprocessedEnvironment = None
         self.agent = None
+        self.buffer = None
 
     def initializeEnvironment(self) -> None:
         """初始化环境"""
@@ -789,8 +777,65 @@ class DQNTrainer:
         finally:
             recorder.close()
 
-    def train(self) -> Tuple[DeepQNAgent, List[float], List[float]]:
-        """训练DQN智能体 - GPU加速版本"""
+    def collect_experience(self) -> Tuple[float, int]:
+        """收集经验数据"""
+        total_reward = 0
+        episode_count = 0
+
+        # 初始化状态
+        states = []
+        for _ in range(self.config.numActors):
+            state, _ = self.preprocessedEnvironment.reset()
+            states.append(state)
+        states = torch.stack(states).to(device)
+
+        # 收集经验
+        for step in range(self.config.horizon):
+            with torch.no_grad():
+                actions, log_probs, values, _ = self.agent.network.get_action(states)
+
+            # 执行动作
+            next_states = []
+            rewards = []
+            dones = []
+            infos = []
+
+            for i in range(self.config.numActors):
+                next_state, reward, done, info = self.preprocessedEnvironment.step(actions[i].item())
+                next_states.append(next_state)
+                rewards.append(reward)
+                dones.append(done)
+                infos.append(info)
+
+                total_reward += reward
+                if done:
+                    episode_count += 1
+
+            # 转换为张量
+            next_states = torch.stack(next_states).to(device)
+            rewards = torch.tensor(rewards, dtype=torch.float32).to(device)
+            dones = torch.tensor(dones, dtype=torch.bool).to(device)
+
+            # 存储经验
+            self.buffer.push(states, actions, rewards, values, log_probs, dones)
+
+            # 更新状态
+            states = next_states
+
+            # 如果环境结束，重置
+            for i in range(self.config.numActors):
+                if dones[i]:
+                    state, _ = self.preprocessedEnvironment.reset()
+                    states[i] = state.to(device)
+
+        # 计算最后一个状态的价值
+        with torch.no_grad():
+            _, last_values, _ = self.agent.network(states)
+
+        return total_reward, episode_count, last_values
+
+    def train(self) -> Tuple[PPOAgent, List[float], List[float]]:
+        """训练PPO智能体"""
         # 首先记录原始环境数据
         self.recordInitialEpisodes()
 
@@ -800,66 +845,41 @@ class DQNTrainer:
         numActions = self.preprocessedEnvironment.actionSpace.n
         stateShape = (4, self.config.screenSize, self.config.screenSize)
 
-        self.agent = DeepQNAgent(stateShape, numActions, self.config)
+        self.agent = PPOAgent(stateShape, numActions, self.config)
+        self.buffer = PPOBuffer(self.config.horizon, self.config.numActors, stateShape)
 
         # 训练统计
         episodeRewards = []
-        episodeLosses = []
         movingAverageRewards = []
-        epsilonHistory = []
+        trainingStatsHistory = []
 
         bestAverageReward = -float('inf')
+        total_timesteps = 0
 
         logger.info(
-            f"开始训练 {self.config.environmentName}, 使用GPU加速ResNet架构, 目标回合数: {self.config.trainingEpisodes}")
+            f"开始训练 {self.config.environmentName}, 使用PPO算法, 目标时间步数: {self.config.trainingTimesteps}")
 
-        for episode in range(self.config.trainingEpisodes):
+        while total_timesteps < self.config.trainingTimesteps:
             try:
-                # 定期清理内存
-                if episode % 10 == 0:
-                    MemoryManager.clearMemory()
+                # 收集经验
+                total_reward, episode_count, last_values = self.collect_experience()
+                total_timesteps += self.config.horizon * self.config.numActors
+                self.agent.stepsCompleted = total_timesteps
+                self.agent.episodesCompleted += episode_count
 
-                state, _ = self.preprocessedEnvironment.reset()
-                totalReward = 0.0
-                stepsInEpisode = 0
-                totalLoss = 0.0
-                lossCount = 0
+                # 计算优势函数和回报
+                self.buffer.compute_advantages_and_returns(
+                    last_values,
+                    self.config.discountFactor,
+                    self.config.gaeLambda
+                )
 
-                while True:
-                    # 确保状态张量格式正确并移动到GPU
-                    if not isinstance(state, torch.Tensor):
-                        state = torch.tensor(state, dtype=torch.float32)
-                    state = state.to(device)  # 立即移动到GPU
+                # 更新网络
+                stats = self.agent.update(self.buffer)
+                trainingStatsHistory.append(stats)
 
-                    action = self.agent.selectAction(state, training=True)
-                    nextState, reward, done, _ = self.preprocessedEnvironment.step(action)
-
-                    # 确保下一个状态张量格式正确并移动到GPU
-                    if not isinstance(nextState, torch.Tensor):
-                        nextState = torch.tensor(nextState, dtype=torch.float32)
-                    nextState = nextState.to(device)  # 立即移动到GPU
-
-                    self.agent.memory.push(state, action, reward, nextState, done)
-
-                    loss = self.agent.optimizeModel()
-                    if loss > 0:
-                        totalLoss += loss
-                        lossCount += 1
-
-                    state = nextState
-                    totalReward += reward
-                    stepsInEpisode += 1
-
-                    if done:
-                        break
-
-                self.agent.episodesCompleted += 1
-
-                # 记录统计信息
-                averageLoss = totalLoss / lossCount if lossCount > 0 else 0.0
-                episodeRewards.append(totalReward)
-                episodeLosses.append(averageLoss)
-                epsilonHistory.append(self.agent.getCurrentEpsilon())
+                # 记录奖励
+                episodeRewards.append(total_reward / episode_count if episode_count > 0 else total_reward)
 
                 # 计算移动平均奖励
                 if len(episodeRewards) >= 50:
@@ -872,88 +892,111 @@ class DQNTrainer:
                 if movingAverage > bestAverageReward and len(episodeRewards) >= 20:
                     bestAverageReward = movingAverage
                     self.agent.saveCheckpoint(
-                        f"./DQN_V1_0_models/gpu_resnet_dqn_best_{self.config.environmentName.replace('/', '_')}.pth"
+                        f"./PPO_V1_0_models/ppo_resnet_best_{self.config.environmentName.replace('/', '_')}.pth"
                     )
 
                 # 定期日志输出
-                if episode % 5 == 0:
-                    stats = self.agent.getTrainingStatistics()
+                if len(episodeRewards) % 5 == 0:
+                    training_stats = self.agent.getTrainingStatistics()
                     logger.info(
-                        f"回合 {episode:4d} | "
-                        f"奖励: {totalReward:7.2f} | "
-                        f"步数: {stepsInEpisode:4d} | "
+                        f"时间步 {total_timesteps:8d} | "
+                        f"平均奖励: {episodeRewards[-1]:7.2f} | "
                         f"移动平均: {movingAverage:7.2f} | "
-                        f"平均损失: {averageLoss:7.4f} | "
-                        f"Epsilon: {stats['currentEpsilon']:.3f} | "
-                        f"经验回放: {stats['memoryUsage']:5.1f}% | "
-                        f"GPU内存: {stats['gpuMemoryAllocated']:.2f}GB"
+                        f"策略损失: {stats['policy_loss']:7.4f} | "
+                        f"价值损失: {stats['value_loss']:7.4f} | "
+                        f"熵: {stats['entropy']:7.4f} | "
+                        f"裁剪比例: {stats['clip_fraction']:7.4f}"
                     )
 
                     # 定期保存检查点
-                    if episode % 50 == 0 and episode > 0:
+                    if len(episodeRewards) % 50 == 0 and len(episodeRewards) > 0:
                         self.agent.saveCheckpoint(
-                            f"./DQN_V1_0_models/gpu_resnet_dqn_checkpoint_{self.config.environmentName.replace('/', '_')}_episode_{episode}.pth"
+                            f"./PPO_V1_0_models/ppo_resnet_checkpoint_{self.config.environmentName.replace('/', '_')}_step_{total_timesteps}.pth"
                         )
 
                 # 检查停止条件
                 if (len(movingAverageRewards) >= 30 and
                         movingAverageRewards[-1] >= self.config.targetAverageReward):
-                    logger.info(f"达到目标性能! 在回合 {episode}")
+                    logger.info(f"达到目标性能! 在时间步 {total_timesteps}")
                     self.agent.saveCheckpoint(
-                        f"./DQN_V1_0_models/gpu_resnet_dqn_final_{self.config.environmentName.replace('/', '_')}.pth"
+                        f"./PPO_V1_0_models/ppo_resnet_final_{self.config.environmentName.replace('/', '_')}.pth"
                     )
                     break
 
+                # 清空缓冲区
+                self.buffer.clear()
+
             except Exception as e:
-                logger.error(f"回合 {episode} 训练过程中发生错误: {e}")
+                logger.error(f"训练过程中发生错误: {e}")
                 MemoryManager.clearMemory()
                 continue
 
-        self._plotTrainingResults(episodeRewards, movingAverageRewards, episodeLosses, epsilonHistory)
+        self._plotTrainingResults(episodeRewards, movingAverageRewards, trainingStatsHistory)
         return self.agent, episodeRewards, movingAverageRewards
 
     def _plotTrainingResults(self, episodeRewards: List[float], movingAverageRewards: List[float],
-                             episodeLosses: List[float], epsilonHistory: List[float]) -> None:
+                             trainingStats: List[Dict[str, float]]) -> None:
         """绘制训练结果图表"""
         try:
-            plt.figure(figsize=(15, 10))
+            plt.figure(figsize=(15, 12))
 
             # 奖励曲线
-            plt.subplot(2, 2, 1)
+            plt.subplot(3, 2, 1)
             plt.plot(episodeRewards, alpha=0.6, label='每回合奖励')
             plt.plot(movingAverageRewards, 'r-', linewidth=2, label='移动平均奖励 (50回合)')
-            plt.title(f'{self.config.environmentName} - GPU加速ResNet DQN回合奖励')
-            plt.xlabel('回合')
+            plt.title(f'{self.config.environmentName} - PPO回合奖励')
+            plt.xlabel('更新次数')
             plt.ylabel('奖励')
             plt.legend()
             plt.grid(True)
 
-            # 损失曲线
-            plt.subplot(2, 2, 2)
-            plt.plot(episodeLosses)
-            plt.title(f'{self.config.environmentName} - GPU加速ResNet DQN训练损失')
-            plt.xlabel('回合')
-            plt.ylabel('损失')
+            # 策略损失
+            plt.subplot(3, 2, 2)
+            policy_losses = [stats['policy_loss'] for stats in trainingStats]
+            plt.plot(policy_losses)
+            plt.title(f'{self.config.environmentName} - PPO策略损失')
+            plt.xlabel('更新次数')
+            plt.ylabel('策略损失')
             plt.grid(True)
 
-            # Epsilon衰减
-            plt.subplot(2, 2, 3)
-            plt.plot(epsilonHistory)
-            plt.title(f'{self.config.environmentName} - GPU加速ResNet DQN Epsilon衰减')
-            plt.xlabel('回合')
-            plt.ylabel('Epsilon')
+            # 价值损失
+            plt.subplot(3, 2, 3)
+            value_losses = [stats['value_loss'] for stats in trainingStats]
+            plt.plot(value_losses)
+            plt.title(f'{self.config.environmentName} - PPO价值损失')
+            plt.xlabel('更新次数')
+            plt.ylabel('价值损失')
             plt.grid(True)
 
-            # 奖励分布
-            plt.subplot(2, 2, 4)
-            plt.hist(episodeRewards, bins=50, alpha=0.7)
-            plt.title(f'{self.config.environmentName} - GPU加速ResNet DQN奖励分布')
-            plt.xlabel('奖励')
-            plt.ylabel('频率')
+            # 熵
+            plt.subplot(3, 2, 4)
+            entropies = [stats['entropy'] for stats in trainingStats]
+            plt.plot(entropies)
+            plt.title(f'{self.config.environmentName} - PPO熵')
+            plt.xlabel('更新次数')
+            plt.ylabel('熵')
+            plt.grid(True)
+
+            # 裁剪比例
+            plt.subplot(3, 2, 5)
+            clip_fractions = [stats['clip_fraction'] for stats in trainingStats]
+            plt.plot(clip_fractions)
+            plt.title(f'{self.config.environmentName} - PPO裁剪比例')
+            plt.xlabel('更新次数')
+            plt.ylabel('裁剪比例')
+            plt.grid(True)
+
+            # KL散度
+            plt.subplot(3, 2, 6)
+            approx_kls = [stats['approx_kl'] for stats in trainingStats]
+            plt.plot(approx_kls)
+            plt.title(f'{self.config.environmentName} - PPO近似KL散度')
+            plt.xlabel('更新次数')
+            plt.ylabel('KL散度')
             plt.grid(True)
 
             plt.tight_layout()
-            plotFileName = f'gpu_resnet_training_results_{self.config.environmentName.replace("/", "_")}.png'
+            plotFileName = f'ppo_training_results_{self.config.environmentName.replace("/", "_")}.png'
             plt.savefig(plotFileName, dpi=150, bbox_inches='tight')
             plt.close()
             logger.info(f"训练图表已保存到: {plotFileName}")
@@ -974,17 +1017,17 @@ def main():
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = True
 
-        # 训练配置
-        config = TrainingConfig()
+        # PPO训练配置 - 按照论文中的超参数
+        config = PPOConfig()
 
-        logger.info("使用GPU加速的经验回放缓冲区 - 注意监控GPU显存使用!")
+        logger.info("开始PPO训练!")
 
         # 创建训练器并开始训练
-        trainer = DQNTrainer(config)
+        trainer = PPOTrainer(config)
         trainedAgent, rewards, movingAverages = trainer.train()
 
         # 输出训练结果
-        logger.info("GPU加速ResNet DQN训练完成!")
+        logger.info("PPO训练完成!")
         if movingAverages:
             logger.info(f"最终移动平均奖励: {movingAverages[-1]:.2f}")
             logger.info(f"最大移动平均奖励: {max(movingAverages):.2f}")
@@ -1003,4 +1046,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
