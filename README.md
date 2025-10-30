@@ -77,3 +77,8 @@
 
     train_V1_0.py是完整的基于"PongNoFrameskip-v4"的强化学习模型训练程序
     inference_V1_0.py是基于实时的环境进行强化学习模型的推理与可视化的程序等
+
+
+
+可以使用这个命令每个两秒实时显示GPU的使用情况 
+watch -n 2 nvidia-smi
