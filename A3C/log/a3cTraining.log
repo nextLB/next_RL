@@ -1,0 +1,42 @@
+2025-10-30 21:46:35,196 - INFO - 开始A3C训练!
+2025-10-30 21:46:35,474 - INFO - 环境初始化完成: BreakoutNoFrameskip-v4
+2025-10-30 21:46:36,720 - INFO - A3C智能体初始化完成: 状态形状=(4, 84, 84), 动作数量=4, LSTM=False
+2025-10-30 21:46:37,040 - INFO - 工作线程 0 初始化完成
+2025-10-30 21:46:37,354 - INFO - 工作线程 1 初始化完成
+2025-10-30 21:46:37,665 - INFO - 工作线程 2 初始化完成
+2025-10-30 21:46:37,965 - INFO - 工作线程 3 初始化完成
+2025-10-30 21:46:38,260 - INFO - 工作线程 4 初始化完成
+2025-10-30 21:46:38,558 - INFO - 工作线程 5 初始化完成
+2025-10-30 21:46:38,844 - INFO - 工作线程 6 初始化完成
+2025-10-30 21:46:39,133 - INFO - 工作线程 7 初始化完成
+2025-10-30 21:46:39,467 - INFO - 工作线程 8 初始化完成
+2025-10-30 21:46:39,790 - INFO - 工作线程 9 初始化完成
+2025-10-30 21:46:40,107 - INFO - 工作线程 10 初始化完成
+2025-10-30 21:46:40,431 - INFO - 工作线程 11 初始化完成
+2025-10-30 21:46:40,734 - INFO - 工作线程 12 初始化完成
+2025-10-30 21:46:41,024 - INFO - 工作线程 13 初始化完成
+2025-10-30 21:46:41,345 - INFO - 工作线程 14 初始化完成
+2025-10-30 21:46:41,626 - INFO - 工作线程 15 初始化完成
+2025-10-30 21:46:41,626 - INFO - 开始训练 BreakoutNoFrameskip-v4, 使用A3C算法, 目标时间步数: 40000000, 工作线程数量: 16
+2025-10-30 21:46:44,064 - ERROR - 工作线程 14 发生错误: cuDNN error: CUDNN_STATUS_INTERNAL_ERROR
+2025-10-30 21:46:44,092 - ERROR - 工作线程 0 发生错误: CUDA out of memory. Tried to allocate 2.00 MiB. GPU 0 has a total capacity of 3.63 GiB of which 10.56 MiB is free. Process 6961 has 1.73 GiB memory in use. Including non-PyTorch memory, this process has 1.35 GiB memory in use. Of the allocated memory 1.21 GiB is allocated by PyTorch, and 39.69 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+2025-10-30 21:46:44,094 - ERROR - 工作线程 1 发生错误: CUDA out of memory. Tried to allocate 2.00 MiB. GPU 0 has a total capacity of 3.63 GiB of which 10.56 MiB is free. Process 6961 has 1.73 GiB memory in use. Including non-PyTorch memory, this process has 1.35 GiB memory in use. Of the allocated memory 1.21 GiB is allocated by PyTorch, and 43.69 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+2025-10-30 21:46:46,291 - INFO - 训练被用户中断
+2025-10-30 21:46:46,363 - ERROR - 工作线程 3 发生错误: element 0 of tensors does not require grad and does not have a grad_fn
+2025-10-30 21:46:46,366 - ERROR - 工作线程 10 发生错误: element 0 of tensors does not require grad and does not have a grad_fn
+2025-10-30 21:46:46,367 - ERROR - 工作线程 2 发生错误: element 0 of tensors does not require grad and does not have a grad_fn
+2025-10-30 21:46:46,368 - ERROR - 工作线程 5 发生错误: element 0 of tensors does not require grad and does not have a grad_fn
+2025-10-30 21:46:46,596 - ERROR - 工作线程 13 发生错误: element 0 of tensors does not require grad and does not have a grad_fn
+2025-10-30 21:46:46,598 - ERROR - 工作线程 4 发生错误: element 0 of tensors does not require grad and does not have a grad_fn
+2025-10-30 21:46:46,637 - ERROR - 工作线程 8 发生错误: element 0 of tensors does not require grad and does not have a grad_fn
+2025-10-30 21:46:46,658 - ERROR - 工作线程 11 发生错误: element 0 of tensors does not require grad and does not have a grad_fn
+2025-10-30 21:46:46,665 - ERROR - 工作线程 15 发生错误: element 0 of tensors does not require grad and does not have a grad_fn
+2025-10-30 21:46:46,679 - ERROR - 工作线程 6 发生错误: element 0 of tensors does not require grad and does not have a grad_fn
+2025-10-30 21:46:46,712 - ERROR - 工作线程 9 发生错误: element 0 of tensors does not require grad and does not have a grad_fn
+2025-10-30 21:46:46,734 - ERROR - 工作线程 7 发生错误: element 0 of tensors does not require grad and does not have a grad_fn
+2025-10-30 21:46:46,739 - ERROR - 工作线程 12 发生错误: element 0 of tensors does not require grad and does not have a grad_fn
+2025-10-30 21:46:46,880 - INFO - A3C模型已保存到: ./A3C_models/a3cFinal_BreakoutNoFrameskip-v4.pth
+2025-10-30 21:46:46,880 - INFO - A3C训练完成!
+2025-10-30 21:46:46,880 - INFO - 最终全局步数: 0
+2025-10-30 21:46:46,880 - INFO - 完成episodes数量: 0
+2025-10-30 21:46:47,027 - INFO - 程序执行完毕
