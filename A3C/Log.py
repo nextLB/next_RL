@@ -23,9 +23,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def trainingMonitor(trainingQueue: mp.Queue, config: A3CConfig):
+def trainingMonitor(trainingQueue: mp.Queue, config: A3CConfig, bestReward: mp.Value = None):
     """训练监控进程"""
     episodeRewards = {}
+    bestModelSaved = False
+
     try:
         while True:
             try:
@@ -39,10 +41,20 @@ def trainingMonitor(trainingQueue: mp.Queue, config: A3CConfig):
 
                 episodeRewards[processId].append(data['reward'])
 
+                # 保存最佳模型
+                if bestReward is not None and data.get('isBest', False):
+                    logger.info(f"🚀 发现新的最佳模型! 奖励: {data['reward']:.2f}")
+                    # 这里可以添加保存最佳模型的逻辑
+                    # 注意：在监控进程中无法直接访问共享模型，需要通过队列通知主进程
+
                 if len(episodeRewards[processId]) % 5 == 0:
                     recentRewards = episodeRewards[processId][-5:]
                     avgReward = np.mean(recentRewards)
                     logger.info(f"进程 {processId} - 回合 {data['episode']}: 奖励 = {data['reward']:.2f}, 平均奖励 (最近5回合): {avgReward:.2f}, 总步数: {data['step']}")
+
+                    # 记录训练进展
+                    if avgReward > -20.0:
+                        logger.info(f"🎯 进程 {processId} 开始学习! 平均奖励: {avgReward:.2f}")
 
             except queue.Empty:
                 continue

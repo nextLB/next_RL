@@ -64,6 +64,11 @@ class ActorCriticNetwork(nn.Module):
 
         # 展平
         x = x.view(x.size(0), -1)
+
+        # 调试：打印展平后的尺寸
+        if hasattr(self, 'debug_mode') and self.debug_mode:
+            print(f"Flattened size: {x.shape}")
+
         x = F.relu(self.fc(x))
 
         # 策略和价值输出
@@ -88,3 +93,9 @@ class ActorCriticNetwork(nn.Module):
             action = actionDist.sample().item()
 
             return action, policyLogits, value
+
+    def getActionProbabilities(self, state: torch.Tensor) -> torch.Tensor:
+        """获取动作概率分布（用于调试）"""
+        with torch.no_grad():
+            policyLogits, _ = self.forward(state)
+            return F.softmax(policyLogits, dim=-1)

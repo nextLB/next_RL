@@ -11,6 +11,9 @@ def computeA3CLoss(model, states: List[torch.Tensor], actions: List[int],
                    rewards: List[float], done: bool, nextState: torch.Tensor,
                    config: A3CConfig, device) -> torch.Tensor:
     """计算A3C损失"""
+    if not states:  # 防止空状态列表
+        return torch.tensor(0.0, device=device, requires_grad=True)
+
     # 确保所有状态都需要梯度
     statesTensor = torch.stack(states).to(device)
 

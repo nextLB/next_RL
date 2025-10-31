@@ -3,6 +3,28 @@ PPO模型推理与可视化程序
 用于加载训练好的PPO模型并进行实时游戏演示
 """
 
+# NumPy 2.0 兼容性修复
+import numpy as np
+import sys
+
+# 处理 NumPy 2.0 不兼容问题
+def fix_numpy_compatibility():
+    """修复 NumPy 2.0 兼容性问题"""
+    numpy_version = np.__version__
+    print(f"NumPy version: {numpy_version}")
+
+    # 为旧代码提供向后兼容
+    if not hasattr(np, 'Inf'):
+        np.Inf = np.inf
+    if not hasattr(np, 'float128'):
+        np.float128 = np.longdouble
+    if not hasattr(np, 'float96'):
+        np.float96 = np.longdouble
+
+# 在导入其他库之前应用修复
+fix_numpy_compatibility()
+
+
 import torch
 import torch.nn as nn
 import numpy as np

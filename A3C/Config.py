@@ -7,15 +7,17 @@ from dataclasses import dataclass
 @dataclass
 class A3CConfig:
     environmentName: str = "PongNoFrameskip-v4"
-    learningRate: float = 0.0007  # 恢复到原始学习率
+    learningRate: float = 0.0007
     discountFactor: float = 0.99
-    numProcesses: int = 8
+    numProcesses: int = 4
     tMax: int = 20
     entropyCoefficient: float = 0.01
     valueLossCoefficient: float = 0.5
     maxGradientNorm: float = 50.0
     frameSkip: int = 4
     screenSize: int = 84
-    trainingSteps: int = 1000000  # 恢复到合理步数
+    trainingSteps: int = 1000000
     saveModelFrequency: int = 10000
+    saveCheckpointFrequency: int = 50000  # 新增：检查点保存频率
     logInterval: int = 1000
+    bestModelThreshold: float = -18.0  # 新增：最佳模型阈值

@@ -6,6 +6,7 @@ import torch
 import torch.multiprocessing as mp
 import time
 import os
+import json
 from Config import A3CConfig
 from Environment import getNumActions
 from A3CAgent import ActorCriticNetwork
@@ -21,9 +22,37 @@ if mp.get_start_method() != 'spawn':
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"使用设备: {device}")
 
-def saveModel(model, optimizer, step: int, config: A3CConfig):
+class TrainingState:
+    """训练状态管理"""
+    def __init__(self):
+        self.bestAverageReward = -float('inf')
+        self.currentStep = 0
+        self.episodeRewards = []
+
+    def update(self, reward: float, step: int):
+        self.episodeRewards.append(reward)
+        if len(self.episodeRewards) > 100:  # 保持最近100个回合
+            self.episodeRewards.pop(0)
+        self.currentStep = step
+
+    def getAverageReward(self) -> float:
+        if not self.episodeRewards:
+            return -float('inf')
+        return np.mean(self.episodeRewards)
+
+    def isBestModel(self, threshold: float = -18.0) -> bool:
+        currentAvg = self.getAverageReward()
+        return currentAvg > self.bestAverageReward and currentAvg > threshold
+
+def saveModel(model, optimizer, step: int, config: A3CConfig, modelType: str = "regular"):
     """保存模型"""
-    modelPath = f"./A3CModels/a3c_model_{config.environmentName.replace('/', '_')}_step_{step}.pth"
+    if modelType == "best":
+        modelPath = f"./A3CModels/a3c_model_{config.environmentName.replace('/', '_')}_best.pth"
+    elif modelType == "checkpoint":
+        modelPath = f"./A3CModels/a3c_model_{config.environmentName.replace('/', '_')}_checkpoint_step_{step}.pth"
+    else:
+        modelPath = f"./A3CModels/a3c_model_{config.environmentName.replace('/', '_')}_step_{step}.pth"
+
     os.makedirs(os.path.dirname(modelPath), exist_ok=True)
 
     torch.save({
@@ -34,8 +63,38 @@ def saveModel(model, optimizer, step: int, config: A3CConfig):
     }, modelPath)
 
     logger.info(f"模型已保存到: {modelPath}")
+    return modelPath
 
-def trainA3C(config: A3CConfig):
+def saveTrainingState(trainingState: TrainingState, config: A3CConfig):
+    """保存训练状态"""
+    statePath = f"./A3CModels/training_state_{config.environmentName.replace('/', '_')}.json"
+    stateData = {
+        'bestAverageReward': trainingState.bestAverageReward,
+        'currentStep': trainingState.currentStep,
+        'episodeRewards': trainingState.episodeRewards
+    }
+
+    with open(statePath, 'w') as f:
+        json.dump(stateData, f)
+
+    logger.info(f"训练状态已保存到: {statePath}")
+
+def loadTrainingState(config: A3CConfig) -> TrainingState:
+    """加载训练状态"""
+    statePath = f"./A3CModels/training_state_{config.environmentName.replace('/', '_')}.json"
+    trainingState = TrainingState()
+
+    if os.path.exists(statePath):
+        with open(statePath, 'r') as f:
+            stateData = json.load(f)
+            trainingState.bestAverageReward = stateData['bestAverageReward']
+            trainingState.currentStep = stateData['currentStep']
+            trainingState.episodeRewards = stateData['episodeRewards']
+        logger.info(f"训练状态已从 {statePath} 加载")
+
+    return trainingState
+
+def trainA3C(config: A3CConfig, resumeFromCheckpoint: str = None):
     """训练A3C算法"""
     logger.info("开始A3C训练")
 
@@ -50,14 +109,27 @@ def trainA3C(config: A3CConfig):
     # 创建优化器
     optimizer = torch.optim.RMSprop(sharedModel.parameters(), lr=config.learningRate)
 
-    # 全局计数器
-    globalCounter = mp.Value('i', 0)
+    # 加载训练状态
+    trainingState = loadTrainingState(config)
 
-    # 训练队列
+    # 从检查点恢复
+    startStep = 0
+    if resumeFromCheckpoint and os.path.exists(resumeFromCheckpoint):
+        checkpoint = torch.load(resumeFromCheckpoint)
+        sharedModel.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        startStep = checkpoint['step']
+        logger.info(f"从检查点恢复: {resumeFromCheckpoint}, 步数: {startStep}")
+
+    # 全局计数器
+    globalCounter = mp.Value('i', startStep)
+
+    # 训练队列和最佳奖励共享变量
     trainingQueue = mp.Queue()
+    bestReward = mp.Value('d', trainingState.bestAverageReward)
 
     # 启动监控进程
-    monitorProcess = mp.Process(target=trainingMonitor, args=(trainingQueue, config))
+    monitorProcess = mp.Process(target=trainingMonitor, args=(trainingQueue, config, bestReward))
     monitorProcess.start()
 
     # 创建工作进程
@@ -65,7 +137,7 @@ def trainA3C(config: A3CConfig):
     for i in range(config.numProcesses):
         process = mp.Process(
             target=worker,
-            args=(i, sharedModel, optimizer, config, globalCounter, trainingQueue, device)
+            args=(i, sharedModel, optimizer, config, globalCounter, trainingQueue, device, bestReward)
         )
         process.start()
         processes.append(process)
@@ -75,11 +147,31 @@ def trainA3C(config: A3CConfig):
 
     # 等待训练完成
     try:
+        lastCheckpointStep = startStep
+        lastSaveStep = startStep
+
         while globalCounter.value < config.trainingSteps:
             time.sleep(5)
             currentStep = globalCounter.value
+
+            # 定期日志
             if currentStep % config.logInterval == 0:
-                logger.info(f"训练进度: {currentStep}/{config.trainingSteps} ({currentStep/config.trainingSteps*100:.1f}%)")
+                progress = currentStep / config.trainingSteps * 100
+                logger.info(f"训练进度: {currentStep}/{config.trainingSteps} ({progress:.1f}%)")
+
+                # 更新训练状态
+                trainingState.currentStep = currentStep
+                saveTrainingState(trainingState, config)
+
+            # 保存检查点
+            if currentStep - lastCheckpointStep >= config.saveCheckpointFrequency:
+                saveModel(sharedModel, optimizer, currentStep, config, "checkpoint")
+                lastCheckpointStep = currentStep
+
+            # 定期保存模型
+            if currentStep - lastSaveStep >= config.saveModelFrequency:
+                saveModel(sharedModel, optimizer, currentStep, config)
+                lastSaveStep = currentStep
 
     except KeyboardInterrupt:
         logger.info("收到中断信号，停止训练")

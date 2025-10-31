@@ -3,18 +3,6 @@ Pong Game Inference Program - Load Trained Model with Real-Time Visualization
 Enhanced Version with Improved Readability, Robustness, and Extensibility
 """
 
-import torch
-import torch.nn.functional as F
-import numpy as np
-import gymnasium as gym
-import matplotlib.pyplot as plt
-from PIL import Image
-import time
-import os
-from collections import deque
-import logging
-from dataclasses import dataclass
-from typing import Dict, List, Tuple, Optional, Any
 # NumPy 2.0 兼容性修复
 import numpy as np
 import sys
@@ -35,6 +23,19 @@ def fix_numpy_compatibility():
 
 # 在导入其他库之前应用修复
 fix_numpy_compatibility()
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import gymnasium as gym
+import matplotlib.pyplot as plt
+from PIL import Image
+import time
+import os
+from collections import deque
+import logging
+from dataclasses import dataclass
+from typing import Dict, List, Tuple, Optional, Any
 
 
 @dataclass

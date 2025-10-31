@@ -13,7 +13,8 @@ from Log import logger
 
 
 def worker(processId: int, sharedModel, optimizer,
-           config: A3CConfig, globalCounter: mp.Value, trainingQueue: mp.Queue, device):
+           config: A3CConfig, globalCounter: mp.Value, trainingQueue: mp.Queue,
+           device, bestReward: mp.Value = None):
     """工作进程函数"""
     try:
         logger.info(f"进程 {processId} 启动")
@@ -49,7 +50,7 @@ def worker(processId: int, sharedModel, optimizer,
             # 收集经验
             for step in range(config.tMax):
                 # 选择动作
-                action, _, _ = localModel.getAction(state)
+                action, policyLogits, value = localModel.getAction(state)
 
                 # 执行动作
                 nextState, reward, done, _ = environment.step(action)
@@ -75,12 +76,21 @@ def worker(processId: int, sharedModel, optimizer,
                     totalEpisodes += 1
 
                     # 发送训练统计信息
-                    trainingQueue.put({
+                    trainingData = {
                         'processId': processId,
                         'episode': totalEpisodes,
                         'reward': episodeReward,
                         'step': currentStep
-                    })
+                    }
+
+                    # 检查是否是最佳模型
+                    if bestReward is not None and episodeReward > bestReward.value:
+                        with bestReward.get_lock():
+                            if episodeReward > bestReward.value:
+                                bestReward.value = episodeReward
+                                trainingData['isBest'] = True
+
+                    trainingQueue.put(trainingData)
 
                     # 重置环境
                     state, _ = environment.reset()
@@ -111,11 +121,6 @@ def worker(processId: int, sharedModel, optimizer,
             # 更新全局模型
             optimizer.step()
             sharedModel.zero_grad()
-
-            # 定期保存模型
-            if processId == 0 and currentStep % config.saveModelFrequency == 0:
-                from A3CTrainer import saveModel
-                saveModel(sharedModel, optimizer, currentStep, config)
 
         environment.close()
         logger.info(f"进程 {processId} 训练完成")
