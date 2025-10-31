@@ -107,7 +107,13 @@ def trainA3C(config: A3CConfig, resumeFromCheckpoint: str = None):
     sharedModel.share_memory()
 
     # 创建优化器
-    optimizer = torch.optim.RMSprop(sharedModel.parameters(), lr=config.learningRate)
+    optimizer = torch.optim.RMSprop(
+        sharedModel.parameters(),
+        lr=config.learningRate,
+        alpha=0.99,
+        eps=1e-5,
+        weight_decay=1e-4  # 添加权重衰减
+    )
 
     # 加载训练状态
     trainingState = loadTrainingState(config)
