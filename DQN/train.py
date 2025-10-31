@@ -12,7 +12,8 @@ import os
 from memory_utils import MemoryManager
 import time
 from contextlib import contextmanager
-from collections import deque, namedtuple
+from collections import namedtuple
+import Environment
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ #
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ #
@@ -84,9 +85,8 @@ def main():
             torch.backends.cudnn.benchmark = True
         # 训练配置
         config = Config.Config()
-        
-        logger.info("使用GPU加速的经验回放缓冲区 - 注意监控GPU显存使用!")
 
+        logger.info("使用GPU加速的经验回放缓冲区 - 注意监控GPU显存使用!")
 
 
     except KeyboardInterrupt:
