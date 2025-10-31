@@ -1,0 +1,50 @@
+2025-10-31 16:50:57,719 - Training - INFO - Starting A3C training!
+2025-10-31 16:50:58,747 - root - INFO - A3C Agent initialized
+2025-10-31 16:50:58,747 - root - INFO - No existing model found at ./A3CModels/best_model.pth, starting fresh
+2025-10-31 16:50:58,751 - root - INFO - Worker thread 0 created
+2025-10-31 16:50:58,754 - root - INFO - Worker thread 1 created
+2025-10-31 16:50:58,757 - root - INFO - Worker thread 2 created
+2025-10-31 16:50:58,760 - root - INFO - Worker thread 3 created
+2025-10-31 16:50:58,763 - root - INFO - Worker thread 4 created
+2025-10-31 16:50:58,765 - root - INFO - Worker thread 5 created
+2025-10-31 16:50:58,768 - root - INFO - Worker thread 6 created
+2025-10-31 16:50:58,771 - root - INFO - Worker thread 7 created
+2025-10-31 16:50:58,774 - root - INFO - Worker thread 8 created
+2025-10-31 16:50:58,777 - root - INFO - Worker thread 9 created
+2025-10-31 16:50:58,779 - root - INFO - Worker thread 10 created
+2025-10-31 16:50:58,782 - root - INFO - Worker thread 11 created
+2025-10-31 16:50:58,785 - root - INFO - Worker thread 12 created
+2025-10-31 16:50:58,788 - root - INFO - Worker thread 13 created
+2025-10-31 16:50:58,790 - root - INFO - Worker thread 14 created
+2025-10-31 16:50:58,793 - root - INFO - Worker thread 15 created
+2025-10-31 16:50:58,796 - root - INFO - Worker thread 16 created
+2025-10-31 16:50:58,799 - root - INFO - Worker thread 17 created
+2025-10-31 16:50:58,801 - root - INFO - Worker thread 18 created
+2025-10-31 16:50:58,804 - root - INFO - Worker thread 19 created
+2025-10-31 16:50:58,807 - root - INFO - Worker thread 20 created
+2025-10-31 16:50:58,810 - root - INFO - Worker thread 21 created
+2025-10-31 16:50:58,813 - root - INFO - Worker thread 22 created
+2025-10-31 16:50:58,815 - root - INFO - Worker thread 23 created
+2025-10-31 16:50:58,818 - root - INFO - Worker thread 24 created
+2025-10-31 16:50:58,821 - root - INFO - Worker thread 25 created
+2025-10-31 16:50:58,823 - root - INFO - Worker thread 26 created
+2025-10-31 16:50:58,827 - root - INFO - Worker thread 27 created
+2025-10-31 16:50:58,829 - root - INFO - Worker thread 28 created
+2025-10-31 16:50:58,832 - root - INFO - Worker thread 29 created
+2025-10-31 16:50:58,835 - root - INFO - Worker thread 30 created
+2025-10-31 16:50:58,838 - root - INFO - Worker thread 31 created
+2025-10-31 16:50:58,838 - root - INFO - Starting training with 32 worker threads
+2025-10-31 16:50:59,062 - root - INFO - Worker thread 0 environment initialized
+2025-10-31 16:50:59,565 - root - INFO - Worker thread 1 environment initialized
+2025-10-31 16:51:00,003 - root - INFO - New best reward: -inf -> -1.0
+2025-10-31 16:51:00,011 - root - INFO - Model saved to: ./A3CModels/best_model.pth
+2025-10-31 16:51:00,305 - root - INFO - Worker thread 2 environment initialized
+2025-10-31 16:51:00,808 - root - INFO - Worker thread 3 environment initialized
+2025-10-31 16:51:01,556 - root - INFO - Worker thread 4 environment initialized
+2025-10-31 16:51:02,296 - root - INFO - Worker thread 5 environment initialized
+2025-10-31 16:51:02,364 - root - INFO - New best reward: -1.0 -> 0.0
+2025-10-31 16:51:02,380 - root - INFO - Model saved to: ./A3CModels/best_model.pth
+2025-10-31 16:51:03,032 - root - INFO - Worker thread 6 environment initialized
+2025-10-31 16:51:03,766 - root - INFO - Worker thread 7 environment initialized
+2025-10-31 16:51:04,519 - root - INFO - Worker thread 8 environment initialized
+2025-10-31 16:51:05,243 - root - INFO - Worker thread 9 environment initialized
