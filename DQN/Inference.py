@@ -15,6 +15,26 @@ from collections import deque
 import logging
 from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional, Any
+# NumPy 2.0 兼容性修复
+import numpy as np
+import sys
+
+# 处理 NumPy 2.0 不兼容问题
+def fix_numpy_compatibility():
+    """修复 NumPy 2.0 兼容性问题"""
+    numpy_version = np.__version__
+    print(f"NumPy version: {numpy_version}")
+
+    # 为旧代码提供向后兼容
+    if not hasattr(np, 'Inf'):
+        np.Inf = np.inf
+    if not hasattr(np, 'float128'):
+        np.float128 = np.longdouble
+    if not hasattr(np, 'float96'):
+        np.float96 = np.longdouble
+
+# 在导入其他库之前应用修复
+fix_numpy_compatibility()
 
 
 @dataclass
@@ -533,9 +553,9 @@ class PongGameInference:
 def findModelFile() -> Optional[str]:
     """Find model file in possible locations with error handling"""
     possiblePaths = [
-        "./DQN_models/gpu_resnet_dqn_best_PongNoFrameskip_v4.pth",
-        "./DQN_models/gpu_resnet_dqn_final_PongNoFrameskip_v4.pth",
-        "./DQN_models/gpu_resnet_dqn_best_PongNoFrameskip-v4.pth",
+        "./DQN_V1_0_models/gpu_resnet_dqn_best_PongNoFrameskip_v4.pth",
+        "./DQN_V1_0_models/gpu_resnet_dqn_final_PongNoFrameskip_v4.pth",
+        "./DQN_V1_0_models/gpu_resnet_dqn_best_PongNoFrameskip-v4.pth",
         "./gpu_resnet_dqn_best_PongNoFrameskip_v4.pth",
         "./models/gpu_resnet_dqn_best_PongNoFrameskip_v4.pth"
     ]

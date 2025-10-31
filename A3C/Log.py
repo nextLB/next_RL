@@ -9,6 +9,9 @@ import numpy as np
 import torch.multiprocessing as mp
 from Config import A3CConfig
 
+# 创建日志目录
+os.makedirs('./log', exist_ok=True)
+
 # 配置日志
 logging.basicConfig(
     level=logging.INFO,
@@ -22,19 +25,24 @@ logger = logging.getLogger(__name__)
 
 def trainingMonitor(trainingQueue: mp.Queue, config: A3CConfig):
     """训练监控进程"""
-    episodeRewards = []
+    episodeRewards = {}
     try:
         while True:
             try:
-                data = trainingQueue.get(timeout=10)
+                data = trainingQueue.get(timeout=30)
                 if data is None:  # 终止信号
                     break
 
-                episodeRewards.append(data['reward'])
+                processId = data['processId']
+                if processId not in episodeRewards:
+                    episodeRewards[processId] = []
 
-                if len(episodeRewards) % 5 == 0:
-                    avgReward = np.mean(episodeRewards[-5:])
-                    logger.info(f"进程 {data['processId']} - 回合 {data['episode']}: 奖励 = {data['reward']}, 平均奖励 (最近5回合): {avgReward:.2f}, 总步数: {data['step']}")
+                episodeRewards[processId].append(data['reward'])
+
+                if len(episodeRewards[processId]) % 5 == 0:
+                    recentRewards = episodeRewards[processId][-5:]
+                    avgReward = np.mean(recentRewards)
+                    logger.info(f"进程 {processId} - 回合 {data['episode']}: 奖励 = {data['reward']:.2f}, 平均奖励 (最近5回合): {avgReward:.2f}, 总步数: {data['step']}")
 
             except queue.Empty:
                 continue

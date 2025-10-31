@@ -7,7 +7,7 @@ from A3CTrainer import trainA3C, testTrainedModel
 from Log import logger
 import os
 
-def A3C_PongNoFrameskip_v4_main():
+def A3CPongNoFrameskipV4Main():
     """主函数"""
     try:
         # 训练配置
@@ -22,7 +22,7 @@ def A3C_PongNoFrameskip_v4_main():
         logger.info("A3C训练完成!")
 
         # 测试最终模型
-        modelPath = f"./A3C_models/a3c_model_{config.environmentName.replace('/', '_')}_step_{config.trainingSteps}.pth"
+        modelPath = f"./A3CModels/a3c_model_{config.environmentName.replace('/', '_')}_step_{config.trainingSteps}.pth"
         if os.path.exists(modelPath):
             testTrainedModel(config, modelPath)
 
@@ -36,4 +36,4 @@ def A3C_PongNoFrameskip_v4_main():
         logger.info("程序执行完毕")
 
 if __name__ == "__main__":
-    A3C_PongNoFrameskip_v4_main()
+    A3CPongNoFrameskipV4Main()

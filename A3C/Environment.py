@@ -24,9 +24,10 @@ class AtariEnvironmentPreprocessor:
         processedState = self._preprocessFrame(state)
 
         # 用相同的帧填充初始缓冲区
-        self.frameBuffer.extend([processedState] * 4)
+        for _ in range(4):
+            self.frameBuffer.append(processedState)
 
-        stateArray = np.stack(self.frameBuffer)
+        stateArray = np.stack(self.frameBuffer, axis=0)  # Shape: (4, 84, 84)
         return stateArray, info
 
     def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
@@ -48,7 +49,7 @@ class AtariEnvironmentPreprocessor:
         processedNextState = self._preprocessFrame(nextState)
         self.frameBuffer.append(processedNextState)
 
-        nextStateArray = np.stack(self.frameBuffer)
+        nextStateArray = np.stack(self.frameBuffer, axis=0)
         return nextStateArray, totalReward, done, stepInfo
 
     def _preprocessFrame(self, frame: np.ndarray) -> np.ndarray:
@@ -71,9 +72,13 @@ class AtariEnvironmentPreprocessor:
         """关闭环境"""
         self.environment.close()
 
+    @property
+    def actionSpace(self):
+        return self.environment.action_space
+
 def createEnvironment(config: A3CConfig):
     """创建环境函数"""
-    env = gym.make(config.environmentName)
+    env = gym.make(config.environmentName, render_mode='rgb_array')
     preprocessedEnv = AtariEnvironmentPreprocessor(
         env,
         frameSkip=config.frameSkip,
@@ -87,4 +92,3 @@ def getNumActions(config: A3CConfig) -> int:
     numActions = env.action_space.n
     env.close()
     return numActions
-

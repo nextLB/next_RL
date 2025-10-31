@@ -5,14 +5,11 @@
 import torch
 import torch.multiprocessing as mp
 import numpy as np
-import time
-from typing import List
 from Config import A3CConfig
 from Environment import createEnvironment
 from A3CAgent import ActorCriticNetwork
 from Loss import computeA3CLoss
 from Log import logger
-import torch.nn.functional as F
 
 
 def worker(processId: int, sharedModel, optimizer,
@@ -43,29 +40,20 @@ def worker(processId: int, sharedModel, optimizer,
 
         logger.info(f"进程 {processId} 初始化完成，开始训练")
 
-        episodeCount = 0
         while globalCounter.value < config.trainingSteps:
             # 同步模型参数
             localModel.load_state_dict(sharedModel.state_dict())
 
             states, actions, rewards = [], [], []
 
-            # 添加网络输出监控
-            if processId == 0 and episodeCount % 50 == 0:
-                with torch.no_grad():
-                    testState = torch.FloatTensor(state).to(device)
-                    policyLogits, value = localModel(testState.unsqueeze(0))
-                    policy = F.softmax(policyLogits, dim=-1)
-                    logger.info(
-                        f"策略熵: {-(policy * torch.log(policy + 1e-8)).sum().item():.4f}, 价值估计: {value.item():.4f}")
-
+            # 收集经验
             for step in range(config.tMax):
                 # 选择动作
                 action, _, _ = localModel.getAction(state)
 
                 # 执行动作
                 nextState, reward, done, _ = environment.step(action)
-                nextState = torch.FloatTensor(nextState).to(device)
+                nextStateTensor = torch.FloatTensor(nextState).to(device)
 
                 # 存储经验
                 states.append(state.clone())
@@ -73,7 +61,7 @@ def worker(processId: int, sharedModel, optimizer,
                 rewards.append(reward)
 
                 # 更新状态
-                state = nextState
+                state = nextStateTensor
                 episodeReward += reward
                 episodeLength += 1
 
@@ -87,13 +75,12 @@ def worker(processId: int, sharedModel, optimizer,
                     totalEpisodes += 1
 
                     # 发送训练统计信息
-                    if processId == 0 and totalEpisodes % 5 == 0:
-                        trainingQueue.put({
-                            'processId': processId,
-                            'episode': totalEpisodes,
-                            'reward': episodeReward,
-                            'step': currentStep
-                        })
+                    trainingQueue.put({
+                        'processId': processId,
+                        'episode': totalEpisodes,
+                        'reward': episodeReward,
+                        'step': currentStep
+                    })
 
                     # 重置环境
                     state, _ = environment.reset()
@@ -102,8 +89,9 @@ def worker(processId: int, sharedModel, optimizer,
                     episodeLength = 0
                     break
 
-            # 计算损失
-            loss = computeA3CLoss(localModel, states, actions, rewards, done, config, device)
+            # 计算损失 - 传递nextState用于bootstrap
+            nextStateForBootstrap = state if not done else torch.FloatTensor(environment.reset()[0]).to(device)
+            loss = computeA3CLoss(localModel, states, actions, rewards, done, nextStateForBootstrap, config, device)
 
             # 反向传播
             optimizer.zero_grad()
@@ -122,6 +110,7 @@ def worker(processId: int, sharedModel, optimizer,
 
             # 更新全局模型
             optimizer.step()
+            sharedModel.zero_grad()
 
             # 定期保存模型
             if processId == 0 and currentStep % config.saveModelFrequency == 0:

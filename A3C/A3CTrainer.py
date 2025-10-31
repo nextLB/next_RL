@@ -23,7 +23,7 @@ print(f"使用设备: {device}")
 
 def saveModel(model, optimizer, step: int, config: A3CConfig):
     """保存模型"""
-    modelPath = f"./A3C_models/a3c_model_{config.environmentName.replace('/', '_')}_step_{step}.pth"
+    modelPath = f"./A3CModels/a3c_model_{config.environmentName.replace('/', '_')}_step_{step}.pth"
     os.makedirs(os.path.dirname(modelPath), exist_ok=True)
 
     torch.save({
@@ -48,7 +48,7 @@ def trainA3C(config: A3CConfig):
     sharedModel.share_memory()
 
     # 创建优化器
-    optimizer = torch.optim.Adam(sharedModel.parameters(), lr=config.learningRate)
+    optimizer = torch.optim.RMSprop(sharedModel.parameters(), lr=config.learningRate)
 
     # 全局计数器
     globalCounter = mp.Value('i', 0)
@@ -69,7 +69,7 @@ def trainA3C(config: A3CConfig):
         )
         process.start()
         processes.append(process)
-        time.sleep(1)  # 避免同时创建过多进程
+        time.sleep(0.5)  # 避免同时创建过多进程
 
     logger.info(f"启动 {len(processes)} 个训练进程")
 
@@ -104,7 +104,7 @@ def testTrainedModel(config: A3CConfig, modelPath: str, numEpisodes: int = 5):
     logger.info(f"开始测试模型: {modelPath}")
 
     # 加载模型
-    checkpoint = torch.load(modelPath)
+    checkpoint = torch.load(modelPath, map_location='cpu')
     trainedModel = ActorCriticNetwork(4, getNumActions(config)).to(device)
     trainedModel.load_state_dict(checkpoint['model_state_dict'])
     trainedModel.eval()
