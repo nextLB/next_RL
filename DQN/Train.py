@@ -13,7 +13,8 @@ from Log import setupLogging
 from Memory import MemoryManager
 
 
-def main():
+
+def DQN_PongNoFrameskip_v4_main():
     """主函数"""
     try:
         # 设置日志
@@ -51,4 +52,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    DQN_PongNoFrameskip_v4_main()

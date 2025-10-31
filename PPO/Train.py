@@ -10,7 +10,7 @@ from PPOTrainer import PPOTrainer
 from Memory import MemoryManager
 
 
-def main():
+def PPO_PongNoFrameskip_v4_main():
     """主函数"""
     try:
         # 设置内存优化
@@ -50,5 +50,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    PPO_PongNoFrameskip_v4_main()
 
