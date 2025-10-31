@@ -1,0 +1,54 @@
+"""
+PPO训练主程序
+"""
+import torch
+import os
+import logging
+from Log import logger
+from Config import PPOConfig, device
+from PPOTrainer import PPOTrainer
+from Memory import MemoryManager
+
+
+def main():
+    """主函数"""
+    try:
+        # 设置内存优化
+        if torch.cuda.is_available():
+            torch.backends.cudnn.benchmark = True
+
+        # 创建必要的目录
+        os.makedirs('./log', exist_ok=True)
+        os.makedirs('./PPO_models', exist_ok=True)
+
+        # PPO训练配置 - 按照论文中的超参数
+        config = PPOConfig()
+
+        logger.info("开始PPO训练!")
+        logger.info(f"使用设备: {device}")
+
+        # 创建训练器并开始训练
+        trainer = PPOTrainer(config)
+        trainedAgent, rewards, movingAverages = trainer.train()
+
+        # 输出训练结果
+        logger.info("PPO训练完成!")
+        if movingAverages:
+            logger.info(f"最终移动平均奖励: {movingAverages[-1]:.2f}")
+            logger.info(f"最大移动平均奖励: {max(movingAverages):.2f}")
+
+        trainer.close()
+
+    except KeyboardInterrupt:
+        logger.info("训练被用户中断")
+    except Exception as e:
+        logger.error(f"训练过程中发生错误: {e}")
+    finally:
+        # 最终清理
+        MemoryManager.clearMemory()
+        logger.info("程序执行完毕")
+
+
+if __name__ == "__main__":
+    main()
+
