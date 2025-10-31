@@ -31,14 +31,14 @@ class A3CConfig:
     environmentName: str = "PongNoFrameskip-v4"
     learningRate: float = 0.0007
     discountFactor: float = 0.99
-    numProcesses: int = 2
-    tMax: int = 5
+    numProcesses: int = 8
+    tMax: int = 20
     entropyCoefficient: float = 0.01
     valueLossCoefficient: float = 0.5
     maxGradientNorm: float = 50.0
     frameSkip: int = 4
     screenSize: int = 84
-    trainingSteps: int = 100000
+    trainingSteps: int = 1000000
     saveModelFrequency: int = 10000
     logInterval: int = 1000
 
