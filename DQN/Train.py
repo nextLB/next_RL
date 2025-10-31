@@ -2,6 +2,10 @@
 主训练程序
 """
 
+
+# V1.0  2025.10.28      --- by next, 初步实现了使用Renet深度学习模型架构的DQN强化学习模型的搭建与训练等
+# V1.1  2025.10.31      --- by next, 针对于V1.0的训练进行了整理和归类，便于以后的扩展等
+
 import torch
 from Config import TrainingConfig
 from DQNTrainer import DQNTrainer

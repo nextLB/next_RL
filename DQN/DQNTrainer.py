@@ -206,43 +206,43 @@ class DQNTrainer:
 
             # 奖励曲线
             plt.subplot(2, 2, 1)
-            plt.plot(episodeRewards, alpha=0.6, label='每回合奖励')
-            plt.plot(movingAverageRewards, 'r-', linewidth=2, label='移动平均奖励 (50回合)')
-            plt.title(f'{self.config.environmentName} - GPU加速ResNet DQN回合奖励')
-            plt.xlabel('回合')
-            plt.ylabel('奖励')
+            plt.plot(episodeRewards, alpha=0.6, label='Reward per episode')
+            plt.plot(movingAverageRewards, 'r-', linewidth=2, label='Moving average reward (50 episodes)')
+            plt.title(f'{self.config.environmentName} - GPU-accelerated ResNet DQN Episode Rewards')
+            plt.xlabel('Episode')
+            plt.ylabel('Reward')
             plt.legend()
             plt.grid(True)
 
             # 损失曲线
             plt.subplot(2, 2, 2)
             plt.plot(episodeLosses)
-            plt.title(f'{self.config.environmentName} - GPU加速ResNet DQN训练损失')
-            plt.xlabel('回合')
-            plt.ylabel('损失')
+            plt.title(f'{self.config.environmentName} - GPU-accelerated ResNet DQN Training Loss')
+            plt.xlabel('Episode')
+            plt.ylabel('Loss')
             plt.grid(True)
 
             # Epsilon衰减
             plt.subplot(2, 2, 3)
             plt.plot(epsilonHistory)
-            plt.title(f'{self.config.environmentName} - GPU加速ResNet DQN Epsilon衰减')
-            plt.xlabel('回合')
+            plt.title(f'{self.config.environmentName} - GPU-accelerated ResNet DQN Epsilon Decay')
+            plt.xlabel('Episode')
             plt.ylabel('Epsilon')
             plt.grid(True)
 
             # 奖励分布
             plt.subplot(2, 2, 4)
             plt.hist(episodeRewards, bins=50, alpha=0.7)
-            plt.title(f'{self.config.environmentName} - GPU加速ResNet DQN奖励分布')
-            plt.xlabel('奖励')
-            plt.ylabel('频率')
+            plt.title(f'{self.config.environmentName} - GPU-accelerated ResNet DQN Reward Distribution')
+            plt.xlabel('Reward')
+            plt.ylabel('Frequency')
             plt.grid(True)
 
             plt.tight_layout()
             plotFileName = f'gpu_resnet_training_results_{self.config.environmentName.replace("/", "_")}.png'
             plt.savefig(plotFileName, dpi=150, bbox_inches='tight')
             plt.close()
-            logger.info(f"训练图表已保存到: {plotFileName}")
+            logger.info(f"训练图表已保存到: {plotFileName}")  # 这句是日志输出，保持中文便于调试
         except Exception as e:
             logger.error(f"绘制训练结果失败: {e}")
 
