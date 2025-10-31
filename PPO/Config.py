@@ -8,7 +8,7 @@ import torch
 @dataclass
 class PPOConfig:
     """PPO训练配置参数"""
-    environmentName: str = "SpaceInvadersNoFrameskip-v4"
+    environmentName: str = "PongNoFrameskip-v4"
     learningRate: float = 0.00025
     clipEpsilon: float = 0.1
     discountFactor: float = 0.99
