@@ -24,14 +24,14 @@ class A3CConfig:
     """A3C training configuration parameters"""
     def __init__(self):
         self.environmentName = "BreakoutNoFrameskip-v4"
-        self.learningRate = 0.0001  # 降低学习率
+        self.learningRate = 0.0001
         self.discountFactor = 0.99
         self.entropyCoeff = 0.01
         self.valueLossCoeff = 0.5
         self.maxGradNorm = 40.0
-        self.nStep = 20  # 增加n-step
-        self.numProcesses = 4
-        self.trainingTimesteps = 10000000  # 增加训练步数
+        self.nStep = 40
+        self.numProcesses = 32
+        self.trainingTimesteps = 1000000
         self.frameSkip = 4
         self.screenSize = 84
         self.useLSTM = False
@@ -40,8 +40,8 @@ class A3CConfig:
         self.maxEpisodeLength = 10000
         self.modelSavePath = "./A3CModels"
         self.bestModelPath = "./A3CModels/best_model.pth"
-        self.checkpointInterval = 50000
-        self.rewardClip = True  # 添加奖励裁剪
+        self.checkpointInterval = 5000
+        self.rewardClip = True
         self.gradientClip = True
 
 
@@ -55,7 +55,7 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler("a3c_training.log")
+        logging.FileHandler("./log/a3c_training.log")
     ]
 )
 logger = logging.getLogger("A3C_Training")
@@ -63,12 +63,11 @@ logger = logging.getLogger("A3C_Training")
 
 # =============================== Neural Network ===============================
 class A3CNetwork(nn.Module):
-    """A3C Neural Network - 简化版本确保兼容性"""
+    """A3C Neural Network"""
 
     def __init__(self, inputShape: Tuple[int, int, int], numActions: int):
         super().__init__()
 
-        # 使用标准架构确保兼容性
         self.convLayers = nn.Sequential(
             nn.Conv2d(inputShape[0], 32, 8, stride=4),
             nn.ReLU(),
@@ -79,13 +78,13 @@ class A3CNetwork(nn.Module):
             nn.AdaptiveAvgPool2d((7, 7))
         )
 
-        # 计算特征大小
+        # Calculate feature size
         with torch.no_grad():
             sampleInput = torch.zeros(1, *inputShape)
             convOutput = self.convLayers(sampleInput)
             self.featureSize = convOutput.view(1, -1).size(1)
 
-        # 简化的策略和值头
+        # Policy and value heads
         self.policyHead = nn.Linear(self.featureSize, numActions)
         self.valueHead = nn.Linear(self.featureSize, 1)
 
@@ -100,7 +99,7 @@ class A3CNetwork(nn.Module):
         return actionProbs, stateValue
 
     def getAction(self, state: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """选择动作"""
+        """Select action"""
         with torch.no_grad():
             actionProbs, stateValue = self.forward(state)
             actionDistribution = torch.distributions.Categorical(actionProbs)
@@ -112,13 +111,13 @@ class A3CNetwork(nn.Module):
 
 # =============================== Environment Wrapper ===============================
 class EnvironmentWrapper:
-    """环境包装器 - 修复预处理问题"""
+    """Environment Wrapper"""
 
     def __init__(self, envName: str, frameSkip: int = 4, screenSize: int = 84):
         self.env = gym.make(envName, render_mode='rgb_array')
         self.frameSkip = frameSkip
         self.screenSize = screenSize
-        self.frameBuffer = deque(maxlen=2)  # 减少帧堆叠
+        self.frameBuffer = deque(maxlen=2)
         self.lives = 0
         self.originalLives = 5
 
@@ -126,12 +125,12 @@ class EnvironmentWrapper:
         state, _ = self.env.reset()
         processedState = self.preprocessFrame(state)
 
-        # 初始化帧缓冲区
+        # Initialize frame buffer
         self.frameBuffer.clear()
-        for _ in range(2):  # 只堆叠2帧
+        for _ in range(2):
             self.frameBuffer.append(processedState)
 
-        # 获取初始生命值
+        # Get initial lives
         self.lives = self.env.unwrapped.ale.lives()
         self.originalLives = self.lives
 
@@ -145,16 +144,16 @@ class EnvironmentWrapper:
         for _ in range(self.frameSkip):
             nextState, reward, terminated, truncated, stepInfo = self.env.step(action)
 
-            # 检查生命值损失
+            # Check life loss
             currentLives = self.env.unwrapped.ale.lives()
             if currentLives < self.lives:
                 lostLife = True
                 self.lives = currentLives
-                reward = -1.0  # 生命损失惩罚
+                reward = -1.0
             elif reward > 0:
-                reward = 1.0  # 正奖励标准化
+                reward = 1.0
             else:
-                reward = 0.0  # 无奖励
+                reward = 0.0
 
             totalReward += reward
 
@@ -166,16 +165,16 @@ class EnvironmentWrapper:
         self.frameBuffer.append(processedNextState)
 
         nextStateTensor = torch.tensor(np.stack(self.frameBuffer), dtype=torch.float32)
-        return nextStateTensor, totalReward, done, {"lost_life": lostLife}
+        return nextStateTensor, totalReward, done, {"lostLife": lostLife}
 
     def preprocessFrame(self, frame: np.ndarray) -> np.ndarray:
-        """改进的帧预处理"""
+        """Improved frame preprocessing"""
         if len(frame.shape) == 3:
-            # 转换为灰度图并裁剪
+            # Convert to grayscale and crop
             frame = np.mean(frame, axis=2)
 
-        # 裁剪Breakout的无关区域
-        frame = frame[34:194, :]  # 移除分数和边框
+        # Crop Breakout irrelevant areas
+        frame = frame[34:194, :]
 
         img = Image.fromarray(frame.astype(np.uint8))
         img = img.resize((self.screenSize, self.screenSize), Image.BILINEAR)
@@ -193,7 +192,7 @@ class EnvironmentWrapper:
 
 # =============================== A3C Agent ===============================
 class A3CAgent:
-    """A3C智能体 - 修复模型兼容性问题"""
+    """A3C Agent"""
 
     def __init__(self, stateShape: Tuple[int, int, int], numActions: int, config: A3CConfig):
         self.globalNetwork = A3CNetwork(stateShape, numActions).to(device)
@@ -202,7 +201,7 @@ class A3CAgent:
                                      alpha=0.99,
                                      eps=1e-5)
 
-        # 共享网络
+        # Share network
         self.globalNetwork.share_memory()
 
         self.globalStep = 0
@@ -211,23 +210,23 @@ class A3CAgent:
         self.lock = Lock()
         self.config = config
 
-        # 训练统计
+        # Training statistics
         self.trainingStats = {
-            'episode_rewards': [],
-            'episode_lengths': [],
-            'value_losses': [],
-            'policy_losses': [],
+            'episodeRewards': [],
+            'episodeLengths': [],
+            'valueLosses': [],
+            'policyLosses': [],
             'entropies': []
         }
 
         logger.info("A3C Agent initialized")
 
     def updateModel(self, gradients: List[Tuple[torch.Tensor, torch.Tensor]]):
-        """更新全局模型"""
+        """Update global model"""
         with self.lock:
             self.optimizer.zero_grad()
 
-            # 应用梯度
+            # Apply gradients
             for param, grad in gradients:
                 if grad is not None:
                     if param.grad is None:
@@ -235,21 +234,21 @@ class A3CAgent:
                     else:
                         param.grad += grad
 
-            # 梯度裁剪
+            # Gradient clipping
             if self.config.gradientClip:
                 torch.nn.utils.clip_grad_norm_(self.globalNetwork.parameters(), self.config.maxGradNorm)
 
-            # 优化步骤
+            # Optimization step
             self.optimizer.step()
 
     def incrementCounters(self, steps: int = 1, episodes: int = 0):
-        """更新计数器"""
+        """Update counters"""
         with self.lock:
             self.globalStep += steps
             self.episodesCompleted += episodes
 
     def saveModel(self, filePath: str):
-        """保存模型"""
+        """Save model"""
         with self.lock:
             torch.save({
                 'globalStep': self.globalStep,
@@ -262,27 +261,27 @@ class A3CAgent:
             logger.info(f"Model saved to: {filePath}")
 
     def loadModel(self, filePath: str):
-        """加载模型 - 添加兼容性处理"""
+        """Load model"""
         with self.lock:
             if os.path.exists(filePath):
                 try:
                     checkpoint = torch.load(filePath, map_location=device)
 
-                    # 加载模型状态
-                    model_state = checkpoint['modelStateDict']
+                    # Load model state
+                    modelState = checkpoint['modelStateDict']
 
-                    # 处理可能的键不匹配
-                    current_model_state = self.globalNetwork.state_dict()
+                    # Handle possible key mismatches
+                    currentModelState = self.globalNetwork.state_dict()
 
-                    # 只加载匹配的键
-                    filtered_state = {k: v for k, v in model_state.items()
-                                    if k in current_model_state and current_model_state[k].shape == v.shape}
+                    # Only load matching keys
+                    filteredState = {k: v for k, v in modelState.items()
+                                   if k in currentModelState and currentModelState[k].shape == v.shape}
 
-                    # 加载匹配的参数
-                    current_model_state.update(filtered_state)
-                    self.globalNetwork.load_state_dict(current_model_state)
+                    # Load matching parameters
+                    currentModelState.update(filteredState)
+                    self.globalNetwork.load_state_dict(currentModelState)
 
-                    # 加载其他状态
+                    # Load other states
                     self.optimizer.load_state_dict(checkpoint['optimizerStateDict'])
                     self.globalStep = checkpoint['globalStep']
                     self.episodesCompleted = checkpoint['episodesCompleted']
@@ -290,7 +289,7 @@ class A3CAgent:
                     self.trainingStats = checkpoint.get('trainingStats', self.trainingStats)
 
                     logger.info(f"Model successfully loaded from {filePath}")
-                    logger.info(f"Loaded {len(filtered_state)}/{len(model_state)} parameters")
+                    logger.info(f"Loaded {len(filteredState)}/{len(modelState)} parameters")
                     return True
 
                 except Exception as e:
@@ -302,17 +301,17 @@ class A3CAgent:
                 return False
 
     def updateBestReward(self, reward: float):
-        """更新最佳奖励"""
+        """Update best reward"""
         with self.lock:
             if reward > self.bestReward:
-                old_reward = self.bestReward
+                oldReward = self.bestReward
                 self.bestReward = reward
-                logger.info(f"New best reward: {old_reward:.1f} -> {reward:.1f}")
+                logger.info(f"New best reward: {oldReward:.1f} -> {reward:.1f}")
                 return True
         return False
 
     def updateTrainingStats(self, statsUpdate: Dict[str, float]):
-        """更新训练统计"""
+        """Update training statistics"""
         with self.lock:
             for key, value in statsUpdate.items():
                 if key in self.trainingStats:
@@ -321,7 +320,7 @@ class A3CAgent:
 
 # =============================== Worker Thread ===============================
 class A3CWorker(threading.Thread):
-    """A3C工作线程 - 改进训练逻辑"""
+    """A3C Worker Thread"""
 
     def __init__(self, workerId: int, globalAgent: A3CAgent, config: A3CConfig):
         super().__init__()
@@ -329,22 +328,22 @@ class A3CWorker(threading.Thread):
         self.globalAgent = globalAgent
         self.config = config
 
-        # 本地网络
-        self.localNetwork = A3CNetwork((2, 84, 84), 4).to(device)  # 改为2帧堆叠
+        # Local network
+        self.localNetwork = A3CNetwork((2, 84, 84), 4).to(device)
 
-        # 环境
+        # Environment
         self.envWrapper = None
 
-        # 工作线程统计
+        # Worker statistics
         self.episodeRewards = deque(maxlen=100)
         self.episodeLengths = deque(maxlen=100)
 
         logger.info(f"Worker thread {workerId} created")
 
     def run(self):
-        """主工作循环"""
+        """Main worker loop"""
         try:
-            # 初始化环境
+            # Initialize environment
             self.envWrapper = EnvironmentWrapper(
                 self.config.environmentName,
                 self.config.frameSkip,
@@ -355,76 +354,76 @@ class A3CWorker(threading.Thread):
             episodeCount = 0
 
             while self.globalAgent.globalStep < self.config.trainingTimesteps:
-                # 同步网络
+                # Synchronize networks
                 self.localNetwork.load_state_dict(self.globalAgent.globalNetwork.state_dict())
 
-                # 重置环境
+                # Reset environment
                 state = self.envWrapper.reset().to(device)
 
                 episodeReward = 0
                 episodeLength = 0
                 done = False
 
-                # 存储轨迹
+                # Store trajectory
                 states, actions, rewards, logProbs, values = [], [], [], [], []
 
                 while not done and episodeLength < self.config.maxEpisodeLength:
-                    # 选择动作
+                    # Select action
                     action, logProb, value = self.localNetwork.getAction(state.unsqueeze(0))
 
-                    # 执行动作
+                    # Execute action
                     nextState, reward, done, info = self.envWrapper.step(action.item())
                     nextState = nextState.to(device)
 
-                    # 奖励裁剪
+                    # Reward clipping
                     if self.config.rewardClip:
                         reward = np.clip(reward, -1, 1)
 
-                    # 存储数据
+                    # Store data
                     states.append(state)
                     actions.append(action)
                     rewards.append(reward)
                     logProbs.append(logProb)
                     values.append(value)
 
-                    # 更新状态
+                    # Update state
                     state = nextState
                     episodeReward += reward
                     episodeLength += 1
 
-                    # n-step更新或episode结束
+                    # n-step update or episode end
                     if len(states) >= self.config.nStep or done:
                         policyLoss, valueLoss, entropy = self.updateWithTrajectory(
                             states, actions, rewards, logProbs, values, done, nextState
                         )
 
-                        # 更新训练统计
+                        # Update training statistics
                         if policyLoss is not None:
                             statsUpdate = {
-                                'value_losses': valueLoss.item(),
-                                'policy_losses': policyLoss.item(),
+                                'valueLosses': valueLoss.item(),
+                                'policyLosses': policyLoss.item(),
                                 'entropies': entropy.item()
                             }
                             self.globalAgent.updateTrainingStats(statsUpdate)
 
                         states, actions, rewards, logProbs, values = [], [], [], [], []
 
-                # Episode完成
+                # Episode completed
                 episodeCount += 1
                 self.globalAgent.incrementCounters(episodes=1)
 
-                # 更新工作线程统计
+                # Update worker statistics
                 self.episodeRewards.append(episodeReward)
                 self.episodeLengths.append(episodeLength)
 
                 averageReward = np.mean(self.episodeRewards) if self.episodeRewards else 0
                 averageLength = np.mean(self.episodeLengths) if self.episodeLengths else 0
 
-                # 检查是否是最佳奖励
+                # Check if best reward
                 if self.globalAgent.updateBestReward(episodeReward):
                     self.globalAgent.saveModel(self.config.bestModelPath)
 
-                # 记录episode结果
+                # Log episode results
                 if episodeCount % self.config.logInterval == 0:
                     logger.info(f"Worker {self.workerId} - Episode {episodeCount}: "
                                f"Reward={episodeReward:.1f}, Avg Reward={averageReward:.1f}, "
@@ -439,15 +438,15 @@ class A3CWorker(threading.Thread):
                 self.envWrapper.close()
 
     def updateWithTrajectory(self, states, actions, rewards, logProbs, values, done, nextState):
-        """轨迹更新"""
+        """Trajectory update"""
         try:
-            # 准备数据张量
+            # Prepare data tensors
             statesTensor = torch.stack(states).to(device)
             actionsTensor = torch.stack(actions).to(device)
             logProbsTensor = torch.stack(logProbs).to(device)
             valuesTensor = torch.stack(values).to(device)
 
-            # 计算回报
+            # Calculate returns
             with torch.no_grad():
                 if not done:
                     _, nextValue = self.localNetwork(nextState.unsqueeze(0))
@@ -457,31 +456,33 @@ class A3CWorker(threading.Thread):
 
             returnsTensor = torch.tensor(returns, dtype=torch.float32, device=device)
 
-            # 计算优势
+            # Calculate advantages
             advantages = returnsTensor - valuesTensor.detach()
 
-            # 优势归一化
+            # Normalize advantages
             advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
 
-            # 计算损失
+            # Calculate losses - Fixed shape mismatch
             policyLoss = -(logProbsTensor * advantages).mean()
-            valueLoss = F.mse_loss(valuesTensor, returnsTensor)
 
-            # 计算熵
+            # Fix: Ensure tensors have same shape for MSE loss
+            valueLoss = F.mse_loss(valuesTensor, returnsTensor.unsqueeze(1))
+
+            # Calculate entropy
             actionProbs, _ = self.localNetwork(statesTensor)
             actionDistribution = torch.distributions.Categorical(actionProbs)
             entropy = actionDistribution.entropy().mean()
 
-            # 总损失
+            # Total loss
             totalLoss = (policyLoss +
                         self.config.valueLossCoeff * valueLoss -
                         self.config.entropyCoeff * entropy)
 
-            # 计算梯度
+            # Calculate gradients
             self.localNetwork.zero_grad()
             totalLoss.backward()
 
-            # 收集梯度
+            # Collect gradients
             gradients = []
             for localParam, globalParam in zip(
                 self.localNetwork.parameters(),
@@ -490,7 +491,7 @@ class A3CWorker(threading.Thread):
                 if localParam.grad is not None:
                     gradients.append((globalParam, localParam.grad.clone()))
 
-            # 更新全局模型
+            # Update global model
             self.globalAgent.updateModel(gradients)
             self.globalAgent.incrementCounters(steps=len(states))
 
@@ -501,7 +502,7 @@ class A3CWorker(threading.Thread):
             return None, None, None
 
     def computeReturns(self, rewards: List[float], lastValue: float, done: bool) -> List[float]:
-        """计算n-step回报"""
+        """Compute n-step returns"""
         returns = []
         R = lastValue if not done else 0.0
 
@@ -514,31 +515,31 @@ class A3CWorker(threading.Thread):
 
 # =============================== Trainer ===============================
 class A3CTrainer:
-    """A3C训练器"""
+    """A3C Trainer"""
 
     def __init__(self, config: A3CConfig):
         self.config = config
         self.globalAgent = None
         self.workers = []
 
-        # 训练监控
+        # Training monitoring
         self.startTime = None
 
     def train(self):
-        """开始训练"""
-        # 创建模型目录
+        """Start training"""
+        # Create model directory
         os.makedirs(self.config.modelSavePath, exist_ok=True)
 
-        # 初始化全局智能体
-        stateShape = (2, self.config.screenSize, self.config.screenSize)  # 改为2帧堆叠
-        numActions = 4  # Breakout动作
+        # Initialize global agent
+        stateShape = (2, self.config.screenSize, self.config.screenSize)
+        numActions = 4  # Breakout actions
 
         self.globalAgent = A3CAgent(stateShape, numActions, self.config)
 
-        # 尝试加载现有模型
+        # Try to load existing model
         modelLoaded = self.globalAgent.loadModel(self.config.bestModelPath)
 
-        # 创建工作线程
+        # Create workers
         self.workers = []
         for i in range(self.config.numProcesses):
             worker = A3CWorker(i, self.globalAgent, self.config)
@@ -548,32 +549,32 @@ class A3CTrainer:
         if modelLoaded:
             logger.info(f"Resuming from checkpoint, current global step: {self.globalAgent.globalStep}")
 
-        # 开始计时
+        # Start timer
         self.startTime = time.time()
 
-        # 启动工作线程
+        # Start workers
         for worker in self.workers:
             worker.start()
-            time.sleep(0.5)  # 错开启动时间
+            time.sleep(0.5)  # Stagger start times
 
-        # 监控训练进度
+        # Monitor training progress
         try:
             lastGlobalStep = self.globalAgent.globalStep
             lastLogTime = time.time()
 
             while self.globalAgent.globalStep < self.config.trainingTimesteps:
-                time.sleep(10)  # 每10秒检查一次
+                time.sleep(10)  # Check every 10 seconds
 
                 currentStep = self.globalAgent.globalStep
                 currentTime = time.time()
 
-                # 计算训练速度
+                # Calculate training speed
                 if currentStep > lastGlobalStep:
                     stepsPerSec = (currentStep - lastGlobalStep) / (currentTime - lastLogTime)
                     elapsedTime = currentTime - self.startTime
                     remainingTime = (self.config.trainingTimesteps - currentStep) / stepsPerSec if stepsPerSec > 0 else 0
 
-                    # 记录进度
+                    # Log progress
                     logger.info(f"Progress: {currentStep}/{self.config.trainingTimesteps} "
                                f"({currentStep/self.config.trainingTimesteps*100:.2f}%) | "
                                f"Speed: {stepsPerSec:.1f} steps/sec | "
@@ -585,7 +586,7 @@ class A3CTrainer:
                     lastGlobalStep = currentStep
                     lastLogTime = currentTime
 
-                    # 保存检查点
+                    # Save checkpoint
                     if currentStep % self.config.checkpointInterval == 0:
                         checkpointPath = os.path.join(
                             self.config.modelSavePath,
@@ -597,7 +598,7 @@ class A3CTrainer:
                 else:
                     logger.warning("No training progress detected...")
 
-                    # 检查线程状态
+                    # Check thread status
                     aliveCount = sum(1 for w in self.workers if w.is_alive())
                     if aliveCount == 0:
                         logger.error("All worker threads have stopped!")
@@ -610,11 +611,11 @@ class A3CTrainer:
             import traceback
             logger.error(traceback.format_exc())
         finally:
-            # 保存最终模型
+            # Save final model
             finalModelPath = os.path.join(self.config.modelSavePath, "final_model.pth")
             self.globalAgent.saveModel(finalModelPath)
 
-            # 等待线程结束
+            # Wait for threads to finish
             for worker in self.workers:
                 if worker.is_alive():
                     worker.join(timeout=5.0)
@@ -625,7 +626,7 @@ class A3CTrainer:
             logger.info(f"Total training time: {self.formatTime(totalTime)}")
 
     def formatTime(self, seconds: float) -> str:
-        """格式化时间"""
+        """Format time"""
         if seconds < 60:
             return f"{seconds:.1f}s"
         elif seconds < 3600:
@@ -636,9 +637,9 @@ class A3CTrainer:
 
 # =============================== Main Function ===============================
 def main():
-    """主训练函数"""
+    """Main training function"""
     try:
-        # 配置
+        # Configuration
         config = A3CConfig()
 
         print("A3C Reinforcement Learning Training System")
@@ -649,12 +650,12 @@ def main():
         print(f"Device: {device}")
         print("=" * 50)
 
-        # 删除旧的模型文件以避免兼容性问题
+        # Remove old model files to avoid compatibility issues
         if os.path.exists(config.bestModelPath):
             os.remove(config.bestModelPath)
             logger.info("Removed old model file to avoid compatibility issues")
 
-        # 开始训练
+        # Start training
         logger.info("Starting A3C training!")
 
         trainer = A3CTrainer(config)
