@@ -10,7 +10,7 @@ import torch
 @dataclass
 class A3CConfig:
     """A3C training configuration parameters"""
-    environmentName: str = "BreakoutNoFrameskip-v4"
+    environmentName: str = "PongNoFrameskip-v4"
     learningRate: float = 0.0001
     discountFactor: float = 0.99
     entropyCoeff: float = 0.01
