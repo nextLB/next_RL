@@ -53,8 +53,8 @@ def trainingMonitor(trainingQueue: mp.Queue, config: A3CConfig, bestReward: mp.V
                     logger.info(f"进程 {processId} - 回合 {data['episode']}: 奖励 = {data['reward']:.2f}, 平均奖励 (最近5回合): {avgReward:.2f}, 总步数: {data['step']}")
 
                     # 记录训练进展
-                    if avgReward > -20.0:
-                        logger.info(f"🎯 进程 {processId} 开始学习! 平均奖励: {avgReward:.2f}")
+                    if avgReward > -10.0:
+                        logger.info(f"注意🎯 进程 {processId}  平均奖励达到: {avgReward:.2f}")
 
             except queue.Empty:
                 continue

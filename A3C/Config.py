@@ -16,8 +16,8 @@ class A3CConfig:
     maxGradientNorm: float = 50.0
     frameSkip: int = 4
     screenSize: int = 84
-    trainingSteps: int = 1000000
+    trainingSteps: int = 9999999
     saveModelFrequency: int = 10000
-    saveCheckpointFrequency: int = 50000  # 新增：检查点保存频率
-    logInterval: int = 1000
+    saveCheckpointFrequency: int = 500000  # 新增：检查点保存频率
+    logInterval: int = 3000
     bestModelThreshold: float = -18.0  # 新增：最佳模型阈值

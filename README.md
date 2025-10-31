@@ -4,7 +4,7 @@
 
 *使用DQN算法进行"PongNoFrameskip-v4"游戏的训练结果展示*
 
-
+![DQN算法在Pong游戏上的效果](./files/DQN_Pong.gif "DQN算法在Pong游戏上的效果")
 
 ## V1.0版本
 

@@ -554,7 +554,7 @@ class PongGameInference:
 def findModelFile() -> Optional[str]:
     """Find model file in possible locations with error handling"""
     possiblePaths = [
-        "./DQN_V1_0_models/gpu_resnet_dqn_best_PongNoFrameskip_v4.pth",
+        "./DQN_V1_0_models/DQN_V1_0_1031_1.pth",
         "./DQN_V1_0_models/gpu_resnet_dqn_final_PongNoFrameskip_v4.pth",
         "./DQN_V1_0_models/gpu_resnet_dqn_best_PongNoFrameskip-v4.pth",
         "./gpu_resnet_dqn_best_PongNoFrameskip_v4.pth",
