@@ -1,22 +1,18 @@
 """
-    训练过程中用于内存管理与监控等的一系列自定义工具
+内存管理模块
 """
 
-
 import torch
-from typing import Tuple
+import gc
 import psutil
 import os
-import gc
-
-
 
 
 class MemoryManager:
     """内存管理器，用于监控和优化内存使用"""
 
     @staticmethod
-    def getGpuMemoryUsage() -> Tuple[float, float]:
+    def getGpuMemoryUsage() -> tuple:
         """获取GPU内存使用情况"""
         if torch.cuda.is_available():
             allocated = torch.cuda.memory_allocated() / 1024 ** 3  # GB
@@ -36,6 +32,3 @@ class MemoryManager:
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
         gc.collect()
-
-
-
