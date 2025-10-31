@@ -14,6 +14,7 @@ import time
 from contextlib import contextmanager
 from collections import namedtuple
 import Environment
+import DQNTrainer
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ #
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ #
@@ -88,6 +89,9 @@ def main():
 
         logger.info("使用GPU加速的经验回放缓冲区 - 注意监控GPU显存使用!")
 
+        # 创建训练器并开始训练
+        trainer = DQNTrainer.DQNTrainer(config)
+        trainer.train(logger)
 
     except KeyboardInterrupt:
         logger.info("训练被用户中断")

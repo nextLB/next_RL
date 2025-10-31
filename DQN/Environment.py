@@ -93,6 +93,7 @@ class EnvironmentRecorder:
 
             return frameInfo
         except Exception as e:
+            print(f"保存帧信息失败: {e}")
             return None
 
     def recordEpisode(self, episodeNum, maxSteps=1000):
@@ -144,6 +145,7 @@ class EnvironmentRecorder:
 
             return totalReward
         except Exception as e:
+            print(f"记录episode失败: {e}")
             return 0.0
 
     def saveSummary(self):
@@ -162,7 +164,7 @@ class EnvironmentRecorder:
                 json.dump(summary, f, indent=2)
 
         except Exception as e:
-            return
+            print(f"保存摘要失败: {e}")
 
     def close(self):
         """关闭环境并保存摘要"""
@@ -193,6 +195,7 @@ class AtariEnvironmentPreprocessor:
             stateTensor = torch.tensor(np.stack(self.frameBuffer), dtype=torch.float32)
             return stateTensor, info
         except Exception as e:
+            print(f"重置环境失败: {e}")
             raise
 
     def step(self, action: int) -> Tuple[torch.Tensor, float, bool, dict]:
@@ -219,6 +222,7 @@ class AtariEnvironmentPreprocessor:
             nextStateTensor = torch.tensor(np.stack(self.frameBuffer), dtype=torch.float32)
             return nextStateTensor, totalReward, done, info
         except Exception as e:
+            print(f"执行动作失败: {e}")
             raise
 
     def _preprocessFrame(self, frame: np.ndarray) -> np.ndarray:
@@ -238,6 +242,7 @@ class AtariEnvironmentPreprocessor:
 
             return frame
         except Exception as e:
+            print(f"预处理帧失败: {e}")
             raise
 
     @property
