@@ -33,6 +33,7 @@
     pip install "autorom[accept-rom-license]"
     pip install grpcio==1.76.0
     pip install gym-notices==0.1.0
+    pip install box2d-py
 
 *配置其它的依赖包*
 

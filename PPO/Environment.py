@@ -11,7 +11,7 @@ import json
 import os
 from datetime import datetime
 import logging
-from Config import PPOConfig
+from Config import PPOConfig, LunarLanderConfig
 
 logger = logging.getLogger(__name__)
 
@@ -245,4 +245,38 @@ class EnvironmentRecorder:
         self.saveSummary()
         self.environment.close()
 
+
+
+# 月球着陆游戏的环境包装器
+class LunarLanderEnvironment(object):
+    def __init__(self, config: LunarLanderConfig):
+        self.environmentName = config.environmentName
+        self.environment = gym.make(self.environmentName, render_mode='rgb_array')
+        self.saveEnvironmentImagesPath = config.saveImagesPath
+        self.saveImagesSteps = config.saveImagesSteps
+
+    # 保存环境数据图像
+    def save_episode_images(self):
+        state, info = self.environment.reset()
+        episodeFrames = []
+        totalReward = 0
+        os.makedirs(self.saveEnvironmentImagesPath, exist_ok=True)
+
+        for step in range(self.saveImagesSteps):
+            # 随机动作
+            action = self.environment.action_space.sample()
+
+
+            nextState, reward, terminated, truncated, info = self.environment.step(action)
+
+            # 打印详细状态信息
+            print('这一步获取到的状态信息如下')
+            print(f"位置: ({nextState[0]:.2f}, {nextState[1]:.2f})")
+            print(f"速度: ({nextState[2]:.2f}, {nextState[3]:.2f})")
+            print(f"角度: {nextState[4]:.2f} rad, 角速度: {nextState[5]:.2f}")
+            print(f"左腿触地: {bool(nextState[6])}, 右腿触地: {bool(nextState[7])}")
+            print(f"reward: {reward:.2f}")
+            print(f"terminated: {terminated}")
+            print(f"truncated: {truncated}")
+            print(f"info: {info}")
 

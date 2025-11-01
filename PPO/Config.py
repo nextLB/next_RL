@@ -39,3 +39,14 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 
+
+
+
+# 月球着陆器的配置
+@dataclass
+class LunarLanderConfig:
+    environmentName: str = "LunarLander-v2"
+    saveImagesPath: str = "./record/LunarLander"
+    saveImagesSteps: int = 1000
+
+

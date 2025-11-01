@@ -4,17 +4,18 @@ PPO训练主程序
 
 # V1.0  2025.10.28      --- by next, 初步实现了使用Renet深度学习模型架构的PPO强化学习模型的搭建与训练等
 # V1.1  2025.10.31      --- by next, 针对于V1.0的训练进行了整理和归类，便于以后的扩展等
-
+# V1.1  2025.11.1       --- by next,
 
 
 
 import torch
 import os
-import logging
 from Log import logger
-from Config import PPOConfig, device
+from Config import PPOConfig, device, LunarLanderConfig
 from PPOTrainer import PPOTrainer
 from Memory import MemoryManager
+from Environment import LunarLanderEnvironment
+
 
 
 def PPO_PongNoFrameskip_v4_main():
@@ -56,6 +57,13 @@ def PPO_PongNoFrameskip_v4_main():
         logger.info("程序执行完毕")
 
 
+# 月球着陆游戏训练主程序
+def PPO_LunarLander_main():
+    config = LunarLanderConfig()
+    environment = LunarLanderEnvironment(config)
+    environment.save_episode_images()
+
 if __name__ == "__main__":
-    PPO_PongNoFrameskip_v4_main()
+    # PPO_PongNoFrameskip_v4_main()
+    PPO_LunarLander_main()
 
