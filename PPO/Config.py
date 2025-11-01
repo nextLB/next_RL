@@ -46,7 +46,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 @dataclass
 class LunarLanderConfig:
     environmentName: str = "LunarLander-v2"
-    saveImagesPath: str = "./record/LunarLander"
-    saveImagesSteps: int = 1000
+    saveVideosPath: str = "./record/LunarLander"
+    saveVideosEpisode: int = 5
+    saveVideosSteps: int = 300
 
 

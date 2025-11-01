@@ -33,7 +33,7 @@
     pip install "autorom[accept-rom-license]"
     pip install grpcio==1.76.0
     pip install gym-notices==0.1.0
-    pip install box2d-py
+
 
 *配置其它的依赖包*
 
@@ -49,6 +49,19 @@
     pip install ale-py==0.8.1
     pip install protobuf
     pip install tensorboard
+
+如果你使用的Linux系统，还是配置更加丰富的环境依赖
+
+    sudo apt-get update
+    sudo apt-get install swig
+    pip install box2d-py
+    pip install gymnasium[box2d]
+    conda install -c conda-forge libstdcxx-ng
+
+*如若上述命令直接使用的过程中，安装不够通畅，则可像下面这样加上清华源进行安装*
+
+    pip install -i https://pypi.tuna.tsinghua.edu.cn/simple gymnasium[box2d]
+
 
 配置成功上述所列的环境与依赖后，即可来到DQN、PPO或A3C文件夹下运行训练或推理程序了
 

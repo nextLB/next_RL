@@ -61,7 +61,7 @@ def PPO_PongNoFrameskip_v4_main():
 def PPO_LunarLander_main():
     config = LunarLanderConfig()
     environment = LunarLanderEnvironment(config)
-    environment.save_episode_images()
+    environment.save_episode_videos()
 
 if __name__ == "__main__":
     # PPO_PongNoFrameskip_v4_main()

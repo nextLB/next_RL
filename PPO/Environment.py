@@ -12,6 +12,7 @@ import os
 from datetime import datetime
 import logging
 from Config import PPOConfig, LunarLanderConfig
+import cv2
 
 logger = logging.getLogger(__name__)
 
@@ -252,31 +253,74 @@ class LunarLanderEnvironment(object):
     def __init__(self, config: LunarLanderConfig):
         self.environmentName = config.environmentName
         self.environment = gym.make(self.environmentName, render_mode='rgb_array')
-        self.saveEnvironmentImagesPath = config.saveImagesPath
-        self.saveImagesSteps = config.saveImagesSteps
+        self.saveEnvironmentVideosPath = config.saveVideosPath
+        self.saveVideosSteps = config.saveVideosSteps
+        self.saveVideosEpisode = config.saveVideosEpisode
 
-    # 保存环境数据图像
-    def save_episode_images(self):
-        state, info = self.environment.reset()
-        episodeFrames = []
-        totalReward = 0
-        os.makedirs(self.saveEnvironmentImagesPath, exist_ok=True)
+    # 保存环境数据视频
+    def save_episode_videos(self):
+        for i in range(self.saveVideosEpisode):
+            state, info = self.environment.reset()
+            episodeFrames = []
+            episodeData = []  # 用于保存每个episode的数据
+            os.makedirs(self.saveEnvironmentVideosPath, exist_ok=True)
 
-        for step in range(self.saveImagesSteps):
-            # 随机动作
-            action = self.environment.action_space.sample()
+            for step in range(self.saveVideosSteps):
+                # 随机动作
+                action = self.environment.action_space.sample()
 
+                # 获取当前步返回的信息
+                nextState, reward, terminated, truncated, info = self.environment.step(action)
 
-            nextState, reward, terminated, truncated, info = self.environment.step(action)
+                # 创建当前步的数据字典
+                stepData = {
+                    'step': step,
+                    'timestamp': datetime.now().isoformat(),
+                    'position': {
+                        'x': float(nextState[0]),
+                        'y': float(nextState[1])
+                    },
+                    'velocity': {
+                        'x': float(nextState[2]),
+                        'y': float(nextState[3])
+                    },
+                    'angle': float(nextState[4]),
+                    'angular_velocity': float(nextState[5]),
+                    'left_leg_contact': bool(nextState[6]),
+                    'right_leg_contact': bool(nextState[7]),
+                    'action': int(action) if hasattr(action, '__int__') else action.tolist(),
+                    'reward': float(reward),
+                    'terminated': bool(terminated),
+                    'truncated': bool(truncated),
+                    'info': info
+                }
 
-            # 打印详细状态信息
-            print('这一步获取到的状态信息如下')
-            print(f"位置: ({nextState[0]:.2f}, {nextState[1]:.2f})")
-            print(f"速度: ({nextState[2]:.2f}, {nextState[3]:.2f})")
-            print(f"角度: {nextState[4]:.2f} rad, 角速度: {nextState[5]:.2f}")
-            print(f"左腿触地: {bool(nextState[6])}, 右腿触地: {bool(nextState[7])}")
-            print(f"reward: {reward:.2f}")
-            print(f"terminated: {terminated}")
-            print(f"truncated: {truncated}")
-            print(f"info: {info}")
+                # 添加到episode数据中
+                episodeData.append(stepData)
+
+                # 获取当前步的图片帧
+                frame = self.environment.render()
+                if frame is not None:
+                    episodeFrames.append(frame)
+
+            # 创建视频流，保存为.mp4的视频
+            frameHeight, frameWidth = episodeFrames[0].shape[:2]
+            videoFilename = os.path.join(self.saveEnvironmentVideosPath, f"lunar_lander_episode_{i}_video.mp4")
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            videoWriter = cv2.VideoWriter(videoFilename, fourcc, 30.0, (frameWidth, frameHeight))
+            for j in range(len(episodeFrames)):
+                videoWriter.write(cv2.cvtColor(episodeFrames[j], cv2.COLOR_RGB2BGR))
+            print(f'环境示例视频: {videoFilename} 保存完毕')
+
+            # 保存JSON数据
+            json_filename = os.path.join(self.saveEnvironmentVideosPath, f"lunar_lander_episode_{i}_data.json")
+            with open(json_filename, 'w', encoding='utf-8') as f:
+                json.dump({
+                    'episode': i,
+                    'total_steps': len(episodeData),
+                    'timestamp': datetime.now().isoformat(),
+                    'steps': episodeData
+                }, f, indent=2, ensure_ascii=False)
+
+            print(f'环境数据JSON: {json_filename} 保存完毕')
 
