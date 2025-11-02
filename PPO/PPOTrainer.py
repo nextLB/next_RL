@@ -7,9 +7,9 @@ import logging
 from typing import List, Dict, Tuple
 import torch
 
-from Config import PPOConfig, device
+from Config import PPOConfig, device, LunarLanderConfig
 from PPOAgent import PPOAgent
-from Environment import AtariEnvironmentPreprocessor, EnvironmentRecorder
+from Environment import AtariEnvironmentPreprocessor, EnvironmentRecorder, LunarLanderEnvironment
 from Experience import PPOBuffer
 from Memory import MemoryManager
 
@@ -135,7 +135,7 @@ class PPOTrainer:
 
     def train(self) -> Tuple[PPOAgent, List[float], List[float]]:
         """训练PPO智能体"""
-        import torch
+
         # 首先记录原始环境数据
         self.recordInitialEpisodes()
 
@@ -314,4 +314,33 @@ class PPOTrainer:
         if self.preprocessedEnvironment:
             self.preprocessedEnvironment.close()
         MemoryManager.clearMemory()
+
+
+
+
+# 月球着陆器游戏的PPO算法的训练器
+class LunarLanderPPOTrainer:
+    def __init__(self, config: LunarLanderConfig):
+        self.config = config
+        self.environment = LunarLanderEnvironment(self.config)
+        self.agent = None
+        self.buffer = None
+
+    def train(self):
+        """训练PPO智能体"""
+
+        # 首先可视化一下环境视频保存下来
+        self.environment.save_episode_videos()
+
+
+
+
+
+
+
+
+
+
+
+
 
