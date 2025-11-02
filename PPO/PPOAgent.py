@@ -58,24 +58,6 @@ class ResidualBlock(nn.Module):
         return out
 
 
-class AttentionModule(nn.Module):
-    """注意力模块 - 增强重要特征关注"""
-
-    def __init__(self, channels: int, reduction: int = 16):
-        super().__init__()
-        self.channel_attention = nn.Sequential(
-            nn.AdaptiveAvgPool2d(1),
-            nn.Conv2d(channels, channels // reduction, 1, bias=False),
-            nn.ReLU(),
-            nn.Conv2d(channels // reduction, channels, 1, bias=False),
-            nn.Sigmoid()
-        )
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        ca = self.channel_attention(x)
-        return x * ca
-
-
 class PPONetwork(nn.Module):
     """PPO网络 - 包含策略网络和价值网络"""
 
@@ -342,23 +324,20 @@ class ActorNetwork(nn.Module):
 
         # 特征提取层
         self.convLayers = nn.Sequential(
-            # 初始卷积层
-            nn.Conv2d(inputShape[0], 64, 8, 4, 2),
-            nn.BatchNorm2d(64),
+            nn.Conv2d(inputShape[0], 32, 3, 4, 1),
             nn.ReLU(),
-            nn.Dropout2d(0.1),
-
-            # 残差块1
-            ResidualBlock(64, 128, 2),
-            AttentionModule(128),
-
-            # 残差块2
-            ResidualBlock(128, 256, 2),
-            AttentionModule(256),
-
-            # 残差块3
-            ResidualBlock(256, 512, 1),
-            AttentionModule(512),
+            nn.Conv2d(32, 64, 3, 2, 1),
+            nn.ReLU(),
+            nn.Conv2d(64, 128, 3, 1, 0),
+            nn.ReLU(),
+            nn.Conv2d(128, 256, 3, 1, 0),
+            nn.ReLU(),
+            nn.Conv2d(256, 512, 3, 1, 0),
+            nn.ReLU(),
+            nn.Conv2d(512, 1024, 3, 1, 0),
+            nn.ReLU(),
+            nn.Conv2d(1024, 512, 3, 1, 0),
+            nn.ReLU(),
         )
 
         # 计算卷积层输出尺寸     使用torch.no_grad()上下文管理器，确保在这个代码块中不会计算梯度
@@ -372,20 +351,18 @@ class ActorNetwork(nn.Module):
 
         # 策略头
         self.policyHead = nn.Sequential(
-            nn.Linear(self.featureSize, 1024),
-            nn.BatchNorm1d(1024),
+            nn.Linear(self.featureSize, 512),
             nn.ReLU(),
-            nn.Dropout(0.2),
-
+            nn.Linear(512, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 2048),
+            nn.ReLU(),
+            nn.Linear(2048, 1024),
+            nn.ReLU(),
             nn.Linear(1024, 512),
-            nn.BatchNorm1d(512),
             nn.ReLU(),
-            nn.Dropout(0.2),
-
             nn.Linear(512, 256),
-            nn.BatchNorm1d(256),
             nn.ReLU(),
-
             nn.Linear(256, numActions)
         )
 
@@ -435,23 +412,20 @@ class CriticNetwork(nn.Module):
 
         # 特征提取层 (与Actor共享结构)
         self.convLayers = nn.Sequential(
-            # 初始卷积层
-            nn.Conv2d(inputShape[0], 64, 8, 4, 2),
-            nn.BatchNorm2d(64),
+            nn.Conv2d(inputShape[0], 32, 3, 4, 1),
             nn.ReLU(),
-            nn.Dropout2d(0.1),
-
-            # 残差块1
-            ResidualBlock(64, 128, 2),
-            AttentionModule(128),
-
-            # 残差块2
-            ResidualBlock(128, 256, 2),
-            AttentionModule(256),
-
-            # 残差块3
-            ResidualBlock(256, 512, 1),
-            AttentionModule(512),
+            nn.Conv2d(32, 64, 3, 2, 1),
+            nn.ReLU(),
+            nn.Conv2d(64, 128, 3, 1, 0),
+            nn.ReLU(),
+            nn.Conv2d(128, 256, 3, 1, 0),
+            nn.ReLU(),
+            nn.Conv2d(256, 512, 3, 1, 0),
+            nn.ReLU(),
+            nn.Conv2d(512, 1024, 3, 1, 0),
+            nn.ReLU(),
+            nn.Conv2d(1024, 512, 3, 1, 0),
+            nn.ReLU(),
         )
 
         # 计算卷积层输出尺寸
@@ -462,24 +436,19 @@ class CriticNetwork(nn.Module):
 
         # 价值头
         self.valueHead = nn.Sequential(
-            nn.Linear(self.featureSize, 1024),
-            nn.BatchNorm1d(1024),
+            nn.Linear(self.featureSize, 512),
             nn.ReLU(),
-            nn.Dropout(0.2),
-
+            nn.Linear(512, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 2048),
+            nn.ReLU(),
+            nn.Linear(2048, 1024),
+            nn.ReLU(),
             nn.Linear(1024, 512),
-            nn.BatchNorm1d(512),
             nn.ReLU(),
-            nn.Dropout(0.2),
-
             nn.Linear(512, 256),
-            nn.BatchNorm1d(256),
             nn.ReLU(),
-
-            nn.Linear(256, 128),
-            nn.ReLU(),
-
-            nn.Linear(128, 1)
+            nn.Linear(256, 1)
         )
 
         self._initializeWeights()

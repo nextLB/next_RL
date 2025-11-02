@@ -795,3 +795,82 @@
 2025-11-03 01:23:43,587 - INFO - 日志系统初始化完成
 2025-11-03 01:23:44,432 - INFO - 开始PPO训练!
 2025-11-03 01:23:44,433 - INFO - 使用设备: cuda
+2025-11-03 01:27:25,286 - INFO - 日志系统初始化完成
+2025-11-03 01:27:26,088 - INFO - 开始PPO训练!
+2025-11-03 01:27:26,088 - INFO - 使用设备: cuda
+2025-11-03 01:27:45,702 - INFO - PPO智能体初始化完成: 状态形状=(1, 240, 240), 动作数量=4
+2025-11-03 01:30:10,208 - INFO - 日志系统初始化完成
+2025-11-03 01:30:10,992 - INFO - 开始PPO训练!
+2025-11-03 01:30:10,992 - INFO - 使用设备: cuda
+2025-11-03 01:30:30,058 - INFO - PPO智能体初始化完成: 状态形状=(1, 240, 240), 动作数量=4
+2025-11-03 01:31:21,213 - INFO - 日志系统初始化完成
+2025-11-03 01:31:22,011 - INFO - 开始PPO训练!
+2025-11-03 01:31:22,011 - INFO - 使用设备: cuda
+2025-11-03 01:31:40,875 - INFO - PPO智能体初始化完成: 状态形状=(1, 240, 240), 动作数量=4
+2025-11-03 01:32:48,108 - INFO - 日志系统初始化完成
+2025-11-03 01:32:48,927 - INFO - 开始PPO训练!
+2025-11-03 01:32:48,928 - INFO - 使用设备: cuda
+2025-11-03 01:32:53,856 - INFO - PPO智能体初始化完成: 状态形状=(1, 240, 240), 动作数量=4
+2025-11-03 01:32:55,871 - INFO - Episode 1, Steps: 60, Reward: -68.61, Mean Reward (100): -68.61
+2025-11-03 01:32:57,751 - INFO - Episode 2, Steps: 74, Reward: -70.22, Mean Reward (100): -69.42
+2025-11-03 01:32:59,739 - INFO - Episode 3, Steps: 77, Reward: -153.26, Mean Reward (100): -97.36
+2025-11-03 01:33:01,462 - INFO - Episode 4, Steps: 71, Reward: -94.09, Mean Reward (100): -96.55
+2025-11-03 01:33:03,445 - INFO - Episode 5, Steps: 83, Reward: -98.50, Mean Reward (100): -96.94
+2025-11-03 01:33:05,625 - INFO - Episode 6, Steps: 89, Reward: -121.55, Mean Reward (100): -101.04
+2025-11-03 01:33:07,645 - INFO - Episode 7, Steps: 81, Reward: -234.36, Mean Reward (100): -120.09
+2025-11-03 01:33:09,840 - INFO - Episode 8, Steps: 91, Reward: -155.10, Mean Reward (100): -124.46
+2025-11-03 01:33:12,625 - INFO - Episode 9, Steps: 114, Reward: -189.03, Mean Reward (100): -131.64
+2025-11-03 01:33:14,428 - INFO - Episode 10, Steps: 75, Reward: -168.44, Mean Reward (100): -135.32
+2025-11-03 01:33:16,837 - INFO - Episode 11, Steps: 94, Reward: -322.34, Mean Reward (100): -152.32
+2025-11-03 01:33:19,580 - INFO - Episode 12, Steps: 107, Reward: -356.49, Mean Reward (100): -169.33
+2025-11-03 01:33:21,629 - INFO - Episode 13, Steps: 81, Reward: -67.10, Mean Reward (100): -161.47
+2025-11-03 01:33:24,270 - INFO - Episode 14, Steps: 112, Reward: -147.73, Mean Reward (100): -160.49
+2025-11-03 01:34:33,927 - INFO - 日志系统初始化完成
+2025-11-03 01:34:34,747 - INFO - 开始PPO训练!
+2025-11-03 01:34:34,748 - INFO - 使用设备: cuda
+2025-11-03 01:35:09,053 - INFO - 日志系统初始化完成
+2025-11-03 01:35:09,750 - INFO - 开始PPO训练!
+2025-11-03 01:35:09,750 - INFO - 使用设备: cuda
+2025-11-03 01:35:12,074 - INFO - PPO智能体初始化完成: 状态形状=(1, 240, 240), 动作数量=4
+2025-11-03 01:38:00,629 - INFO - 日志系统初始化完成
+2025-11-03 01:38:01,362 - INFO - 开始PPO训练!
+2025-11-03 01:38:01,362 - INFO - 使用设备: cuda
+2025-11-03 01:38:06,420 - INFO - PPO智能体初始化完成: 状态形状=(1, 240, 240), 动作数量=4
+2025-11-03 01:38:08,723 - INFO - Episode 1, Steps: 76, Reward: -80.61, Mean Reward (100): -80.61
+2025-11-03 01:38:11,524 - INFO - Episode 2, Steps: 113, Reward: -106.17, Mean Reward (100): -93.39
+2025-11-03 01:38:14,256 - INFO - Episode 3, Steps: 102, Reward: -82.77, Mean Reward (100): -89.85
+2025-11-03 01:38:16,270 - INFO - Episode 4, Steps: 79, Reward: -139.49, Mean Reward (100): -102.26
+2025-11-03 01:38:17,822 - INFO - Episode 5, Steps: 60, Reward: -177.88, Mean Reward (100): -117.38
+2025-11-03 01:38:20,908 - INFO - Episode 6, Steps: 117, Reward: -130.67, Mean Reward (100): -119.60
+2025-11-03 01:38:23,509 - INFO - Episode 7, Steps: 86, Reward: -406.43, Mean Reward (100): -160.57
+2025-11-03 01:38:25,627 - INFO - Episode 8, Steps: 80, Reward: -253.77, Mean Reward (100): -172.22
+2025-11-03 01:38:27,650 - INFO - Episode 9, Steps: 83, Reward: -282.17, Mean Reward (100): -184.44
+2025-11-03 01:38:29,439 - INFO - Episode 10, Steps: 69, Reward: -56.40, Mean Reward (100): -171.64
+2025-11-03 01:38:32,696 - INFO - Episode 11, Steps: 112, Reward: -466.08, Mean Reward (100): -198.40
+2025-11-03 01:38:36,066 - INFO - Episode 12, Steps: 123, Reward: -66.23, Mean Reward (100): -187.39
+2025-11-03 01:38:37,932 - INFO - Episode 13, Steps: 73, Reward: -32.16, Mean Reward (100): -175.45
+2025-11-03 01:38:40,168 - INFO - Episode 14, Steps: 80, Reward: -53.35, Mean Reward (100): -166.73
+2025-11-03 01:38:43,499 - INFO - Episode 15, Steps: 117, Reward: -129.04, Mean Reward (100): -164.21
+2025-11-03 01:38:46,635 - INFO - Episode 16, Steps: 118, Reward: -310.15, Mean Reward (100): -173.34
+2025-11-03 01:38:49,017 - INFO - Episode 17, Steps: 83, Reward: -417.51, Mean Reward (100): -187.70
+2025-11-03 01:38:51,221 - INFO - Episode 18, Steps: 82, Reward: -321.98, Mean Reward (100): -195.16
+2025-11-03 01:38:53,156 - INFO - Episode 19, Steps: 69, Reward: -76.80, Mean Reward (100): -188.93
+2025-11-03 01:38:55,767 - INFO - Episode 20, Steps: 103, Reward: -153.39, Mean Reward (100): -187.15
+2025-11-03 01:38:57,828 - INFO - Episode 21, Steps: 73, Reward: -271.54, Mean Reward (100): -191.17
+2025-11-03 01:39:00,146 - INFO - Episode 22, Steps: 83, Reward: -156.36, Mean Reward (100): -189.59
+2025-11-03 01:39:20,648 - INFO - Step 19, Stats: {'policyLoss': np.float64(-8.75386991436411e-05), 'entropy': np.float64(1.3862883150577545), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-7.224839405353122e-05), 'ratioMean': np.float64(1.0000784337520598), 'valueLoss': np.float64(6.126996955275535), 'explainedVariance': np.float64(-2.3979863703250883), 'valueMean': np.float64(-0.7189627535641193), 'returnMean': np.float64(-0.12444208487868309), 'on_policy_update_epochs': 20, 'off_policy_policy_loss': -5.6087260246276855, 'off_policy_value_loss': 30.400482177734375, 'off_policy_entropy': 1.38627290725708, 'off_policy_td_error_mean': -4.0521559715271, 'off_policy_batch_size': 10}
+2025-11-03 01:39:22,892 - INFO - Episode 23, Steps: 114, Reward: 4.73, Mean Reward (100): -181.14
+2025-11-03 01:39:25,441 - INFO - Episode 24, Steps: 110, Reward: -495.11, Mean Reward (100): -194.22
+2025-11-03 01:39:28,246 - INFO - Episode 25, Steps: 116, Reward: -271.55, Mean Reward (100): -197.32
+2025-11-03 01:39:29,679 - INFO - Episode 26, Steps: 61, Reward: -105.30, Mean Reward (100): -193.78
+2025-11-03 01:39:31,492 - INFO - Episode 27, Steps: 76, Reward: -101.83, Mean Reward (100): -190.37
+2025-11-03 01:39:34,051 - INFO - Episode 28, Steps: 109, Reward: -211.45, Mean Reward (100): -191.12
+2025-11-03 01:39:36,104 - INFO - Episode 29, Steps: 79, Reward: -112.13, Mean Reward (100): -188.40
+2025-11-03 01:39:38,225 - INFO - Episode 30, Steps: 91, Reward: -145.24, Mean Reward (100): -186.96
+2025-11-03 01:39:40,547 - INFO - Episode 31, Steps: 100, Reward: -82.43, Mean Reward (100): -183.59
+2025-11-03 01:39:42,333 - INFO - Episode 32, Steps: 77, Reward: -103.46, Mean Reward (100): -181.09
+2025-11-03 01:41:31,565 - INFO - 日志系统初始化完成
+2025-11-03 01:41:32,467 - INFO - 开始PPO训练!
+2025-11-03 01:41:32,467 - INFO - 使用设备: cuda
+2025-11-03 01:41:52,881 - INFO - PPO智能体初始化完成: 状态形状=(1, 240, 240), 动作数量=4
+2025-11-03 01:41:55,745 - INFO - Episode 1, Steps: 82, Reward: -188.47, Mean Reward (100): -188.47
