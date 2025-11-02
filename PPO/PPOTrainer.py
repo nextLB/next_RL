@@ -4,8 +4,10 @@ PPO训练器
 import numpy as np
 import matplotlib.pyplot as plt
 import logging
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Any
 import torch
+from numpy import floating
+
 from Config import PPOConfig, device, LunarLanderConfig
 from PPOAgent import PPOAgent, LunarLanderPPOAgent
 from Environment import AtariEnvironmentPreprocessor, EnvironmentRecorder, LunarLanderEnvironment
@@ -133,7 +135,7 @@ class PPOTrainer:
 
         return totalReward, episodeCount, lastValues
 
-    def train(self) -> Tuple[PPOAgent, List[float], List[float]]:
+    def train(self) -> tuple[PPOAgent, list[float], list[floating[Any]]]:
         """训练PPO智能体"""
 
         # 首先记录原始环境数据
@@ -418,8 +420,8 @@ class LunarLanderPPOTrainer:
                     # 执行更新agent
                     stats = self.agent.update(self.experienceBuffer)
 
-                    # if stats:
-                    #     logger.info(f"Step {steps}, Stats: {stats}")
+                    if stats:
+                        logger.info(f"Step {steps}, Stats: {stats}")
 
                 # # 定期保存
                 # if totalSteps % self.config.saveInterval == 0:

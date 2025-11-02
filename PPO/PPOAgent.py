@@ -14,9 +14,9 @@ import logging
 
 from torch import Tensor
 from torch.distributions import Distribution
-
-from Config import PPOConfig, device, LunarLanderConfig
 import numpy as np
+from Config import PPOConfig, device, LunarLanderConfig
+
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +56,24 @@ class ResidualBlock(nn.Module):
         out = F.relu(out)
 
         return out
+
+
+class AttentionModule(nn.Module):
+    """注意力模块 - 增强重要特征关注"""
+
+    def __init__(self, channels: int, reduction: int = 16):
+        super().__init__()
+        self.channel_attention = nn.Sequential(
+            nn.AdaptiveAvgPool2d(1),
+            nn.Conv2d(channels, channels // reduction, 1, bias=False),
+            nn.ReLU(),
+            nn.Conv2d(channels // reduction, channels, 1, bias=False),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        ca = self.channel_attention(x)
+        return x * ca
 
 
 class PPONetwork(nn.Module):
@@ -324,12 +342,23 @@ class ActorNetwork(nn.Module):
 
         # 特征提取层
         self.convLayers = nn.Sequential(
-            nn.Conv2d(inputShape[0], 32, 8, 4, 1),
+            # 初始卷积层
+            nn.Conv2d(inputShape[0], 64, 8, 4, 2),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
-            nn.Conv2d(32, 64, 4, 2, 1),
-            nn.ReLU(),
-            nn.Conv2d(64, 64, 3, 1, 0),
-            nn.ReLU(),
+            nn.Dropout2d(0.1),
+
+            # 残差块1
+            ResidualBlock(64, 128, 2),
+            AttentionModule(128),
+
+            # 残差块2
+            ResidualBlock(128, 256, 2),
+            AttentionModule(256),
+
+            # 残差块3
+            ResidualBlock(256, 512, 1),
+            AttentionModule(512),
         )
 
         # 计算卷积层输出尺寸     使用torch.no_grad()上下文管理器，确保在这个代码块中不会计算梯度
@@ -343,10 +372,20 @@ class ActorNetwork(nn.Module):
 
         # 策略头
         self.policyHead = nn.Sequential(
-            nn.Linear(self.featureSize, 512),
+            nn.Linear(self.featureSize, 1024),
+            nn.BatchNorm1d(1024),
             nn.ReLU(),
+            nn.Dropout(0.2),
+
+            nn.Linear(1024, 512),
+            nn.BatchNorm1d(512),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+
             nn.Linear(512, 256),
+            nn.BatchNorm1d(256),
             nn.ReLU(),
+
             nn.Linear(256, numActions)
         )
 
@@ -377,10 +416,10 @@ class ActorNetwork(nn.Module):
         """
             policyLogits = torch.tensor([2.0, 1.0, 0.0])  # 动作的"分数"
             distribution = torch.distributions.Categorical(logits=policyLogits)
-            
+
             # Categorical内部自动进行softmax
             probs = F.softmax(policyLogits, dim=-1)  # [0.665, 0.244, 0.090]
-            
+
             # 现在可以使用分布对象：
             action = distribution.sample()      # 采样一个动作（如：0）
             log_prob = distribution.log_prob(action)  # 计算该动作的对数概率
@@ -396,12 +435,23 @@ class CriticNetwork(nn.Module):
 
         # 特征提取层 (与Actor共享结构)
         self.convLayers = nn.Sequential(
-            nn.Conv2d(inputShape[0], 32, kernel_size=8, stride=4),
+            # 初始卷积层
+            nn.Conv2d(inputShape[0], 64, 8, 4, 2),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
-            nn.Conv2d(32, 64, kernel_size=4, stride=2),
-            nn.ReLU(),
-            nn.Conv2d(64, 64, kernel_size=3, stride=1),
-            nn.ReLU()
+            nn.Dropout2d(0.1),
+
+            # 残差块1
+            ResidualBlock(64, 128, 2),
+            AttentionModule(128),
+
+            # 残差块2
+            ResidualBlock(128, 256, 2),
+            AttentionModule(256),
+
+            # 残差块3
+            ResidualBlock(256, 512, 1),
+            AttentionModule(512),
         )
 
         # 计算卷积层输出尺寸
@@ -412,11 +462,24 @@ class CriticNetwork(nn.Module):
 
         # 价值头
         self.valueHead = nn.Sequential(
-            nn.Linear(self.featureSize, 512),
+            nn.Linear(self.featureSize, 1024),
+            nn.BatchNorm1d(1024),
             nn.ReLU(),
+            nn.Dropout(0.2),
+
+            nn.Linear(1024, 512),
+            nn.BatchNorm1d(512),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+
             nn.Linear(512, 256),
+            nn.BatchNorm1d(256),
             nn.ReLU(),
-            nn.Linear(256, 1)
+
+            nn.Linear(256, 128),
+            nn.ReLU(),
+
+            nn.Linear(128, 1)
         )
 
         self._initializeWeights()
