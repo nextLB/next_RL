@@ -329,3 +329,46 @@ class LunarLanderEnvironment(object):
     @property
     def actionSpace(self):
         return self.environment.action_space
+
+    # 获取环境的状态空间
+    @property
+    def observationSpace(self):
+        return self.environment.observation_space
+
+    # 重置环境
+    def reset(self):
+        state, info = self.environment.reset()
+        return state, info
+
+    # 获取当前步的图像帧(rgb格式)
+    def get_rgb_frame(self):
+        frame = self.environment.render()
+        return frame
+
+    # 获取当前步的图像帧(单通道的灰度图格式) 本方法中还有对于灰度图的预处理步骤
+    def get_gray_frame(self):
+        frame = self.environment.render()
+        # 转换为灰度图
+        if len(frame.shape) == 3:
+            frame = np.mean(frame, axis=2)  # 使用numpy提高效率
+
+        # 调整大小
+        img = Image.fromarray(frame.astype(np.uint8))
+        frame = np.array(img)
+
+        # 归一化到 [0, 1]
+        frame = frame.astype(np.float32) / 255.0
+
+        return frame
+
+
+    # 执行下一步的交互动作
+    def step(self, action: int):
+        nextState, reward, terminated, truncated, info = self.environment.step(action)
+        done = terminated or truncated
+        return nextState, reward, done, info
+
+
+
+
+

@@ -105,10 +105,20 @@ class PPOBuffer:
 
 
 
+
+
+
+
+# LunarLander游戏的缓冲池
 class LunarLanderExperienceBuffer:
     """LunarLander PPO专用的经验缓冲区"""
-    def __init__(self):
-        self.name = 'LunarLanderExperienceBuffer'
+    def __init__(self, bufferSize: int):
+        self.bufferSize = bufferSize
+
+
+
+
+
 
 
 

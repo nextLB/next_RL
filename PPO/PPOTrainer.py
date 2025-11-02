@@ -333,15 +333,32 @@ class LunarLanderPPOTrainer:
         # self.environment.save_episode_videos()
         # 获取动作空间
         numActions = self.environment.actionSpace.n
+        # 获取状态(观测)空间        暂时似乎还没有用处
+        numObservations = self.environment.observationSpace
         # 设置输入agent网络中的状态图片的尺寸
         statesShape = (self.config.batchSize, self.config.screenSize, self.config.screenSize)
         # 初始化与构建PPO的Agent
         self.agent = LunarLanderPPOAgent(statesShape, numActions, self.config)
         # 初始化LunarLander游戏的经验缓冲池
-        self.experienceBuffer = LunarLanderExperienceBuffer()
+        self.experienceBuffer = LunarLanderExperienceBuffer(self.config.bufferSize)
 
+        # 准备开始训练循环的迭代
+        episode = 0
 
+        while episode < self.config.trainingEpisode:
+            episode += 1
+            episodeReward = 0
+            state, info = self.environment.reset()
+            done = False
+            steps = 0
 
+            # 用于记录训练过程的各方面的信息
+            states = []
+            actions = []
+            rewards = []
+            values = []
+            logProbs = []
+            dones = []
 
 
 

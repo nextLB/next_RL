@@ -60,6 +60,10 @@ class LunarLanderConfig:
     clipEpsilon: float = 0.1
     entropyCoeff: float = 0.01
     valueRegCoeff: float = 0.01
+    # 经验缓冲区的大小设定
+    bufferSize: int = 10000
+    # 训练的总轮数设定
+    trainingEpisode: int = 1000
 
 
 
