@@ -105,7 +105,10 @@ class PPOBuffer:
 
 
 
-
+class LunarLanderExperienceBuffer:
+    """LunarLander PPO专用的经验缓冲区"""
+    def __init__(self):
+        self.name = 'LunarLanderExperienceBuffer'
 
 
 

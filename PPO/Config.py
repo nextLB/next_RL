@@ -57,6 +57,11 @@ class LunarLanderConfig:
     criticLearningRate: float = 0.00025
     # 优化器的衰减系数
     adamEpsilon: float = 1e-5
+    clipEpsilon: float = 0.1
+    entropyCoeff: float = 0.01
+    valueRegCoeff: float = 0.01
+
+
 
 
 

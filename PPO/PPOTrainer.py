@@ -10,7 +10,7 @@ import torch
 from Config import PPOConfig, device, LunarLanderConfig
 from PPOAgent import PPOAgent, LunarLanderPPOAgent
 from Environment import AtariEnvironmentPreprocessor, EnvironmentRecorder, LunarLanderEnvironment
-from Experience import PPOBuffer
+from Experience import PPOBuffer, LunarLanderExperienceBuffer
 from Memory import MemoryManager
 
 logger = logging.getLogger(__name__)
@@ -324,7 +324,7 @@ class LunarLanderPPOTrainer:
         self.config = config
         self.environment = LunarLanderEnvironment(self.config)
         self.agent = None
-        self.buffer = None
+        self.experienceBuffer = None
 
     def train(self):
         """训练PPO智能体"""
@@ -337,6 +337,9 @@ class LunarLanderPPOTrainer:
         statesShape = (self.config.batchSize, self.config.screenSize, self.config.screenSize)
         # 初始化与构建PPO的Agent
         self.agent = LunarLanderPPOAgent(statesShape, numActions, self.config)
+        # 初始化LunarLander游戏的经验缓冲池
+        self.experienceBuffer = LunarLanderExperienceBuffer()
+
 
 
 

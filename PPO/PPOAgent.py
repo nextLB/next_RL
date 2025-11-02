@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from typing import Tuple, Dict, Any
+from typing import Tuple, Dict, Any, Optional
 import logging
 
 from torch import Tensor
@@ -499,6 +499,77 @@ class LunarLanderPPOAgent:
         self.currentEpoch = 0
 
         logger.info(f"PPO智能体初始化完成: 状态形状={stateShape}, 动作数量={numActions}")
+
+
+    def compute_actor_loss(self, states: torch.Tensor, actions: torch.Tensor,  oldLogProbs: torch.Tensor, advantages: torch.Tensor) -> Tuple[torch.Tensor, Dict[str, float]]:
+        """计算Actor损失 (策略损失)"""
+        policyLogits = self.netWork.actor(states)
+        dist = torch.distributions.Categorical(logits=policyLogits)
+
+        # 新策略的log概率
+        newLogProbs = dist.log_prob(actions)
+        entropy = dist.entropy().mean()
+
+        # 重要性采样比率
+        ratio = torch.exp(newLogProbs - oldLogProbs)
+
+        # PPO裁剪目标
+        surr1 = ratio * advantages
+        surr2 = torch.clamp(ratio, 1.0 - self.config.clipEpsilon, 1.0 + self.config.clipEpsilon) * advantages
+        policyLoss = -torch.min(surr1, surr2).mean()
+
+        # 熵正则化
+        totalPolicyLoss = policyLoss - self.config.entropyCoeff * entropy
+
+        # 统计信息
+        clipFraction = torch.mean((torch.abs(ratio - 1.0) > self.config.clipEpsilon).float()).item()
+        approxKl = (oldLogProbs - newLogProbs).mean().item()
+
+        stats = {
+            'policyLoss': policyLoss.item(),
+            'entropy': entropy.item(),
+            'clipFraction': clipFraction,
+            'approxKl': approxKl,
+            'ratioMean': ratio.mean().item()
+        }
+
+        return totalPolicyLoss, stats
+
+    def compute_critic_loss(self, states: torch.Tensor, returns: torch.Tensor) -> Tuple[torch.Tensor, Dict[str, float]]:
+        """计算Critic损失 (价值损失)"""
+        values = self.netWork.critic(states)
+        valueLoss = F.mse_loss(values, returns)
+
+        # 进行价值裁剪
+        valuesClipped = returns + torch.clamp(values - returns, -self.config.clipEpsilon, self.config.clipEpsilon)
+        valueLossClipped = F.mse_loss(valuesClipped, returns)
+        valueLoss = torch.max(valueLoss, valueLossClipped)
+
+        # 价值正则化
+        valueReg = torch.mean(values ** 2)
+        valueLoss += self.config.valueRegCoeff * valueReg
+
+        # 统计信息
+        explainedVariance = 1 - F.mse_loss(values, returns) / returns.var()
+
+        stats = {
+            'valueLoss': valueLoss.item(),
+            'explainedVariance': explainedVariance.item(),
+            'valueMean': values.mean().item(),
+            'returnMean': returns.mean().item()
+        }
+
+        return valueLoss, stats
+
+    def on_policy_update(self):
+        """On-policy更新"""
+
+
+    def off_policy_update(self):
+        """Off-policy更新"""
+
+    def update(self, onPolicyBuffer, offPolicyBuffer):
+        """组合更新 - 支持on-policy和off-policy"""
 
 
 
