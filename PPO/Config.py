@@ -49,5 +49,14 @@ class LunarLanderConfig:
     saveVideosPath: str = "./record/LunarLander"
     saveVideosEpisode: int = 5
     saveVideosSteps: int = 300
+    screenSize: int = 240
+    batchSize: int = 32
+    # 策略网络的学习率
+    actorLearningRate: float = 0.00025
+    # 价值网络的学习率
+    criticLearningRate: float = 0.00025
+    # 优化器的衰减系数
+    adamEpsilon: float = 1e-5
+
 
 

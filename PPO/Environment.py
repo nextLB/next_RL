@@ -324,3 +324,8 @@ class LunarLanderEnvironment(object):
 
             print(f'环境数据JSON: {json_filename} 保存完毕')
 
+
+    # 获取环境的动作空间
+    @property
+    def actionSpace(self):
+        return self.environment.action_space

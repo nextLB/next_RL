@@ -1,13 +1,20 @@
 """
 PPO智能体和网络结构
 """
+from pyexpat import features
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from typing import Tuple, Dict, Any
 import logging
-from Config import PPOConfig, device
+
+from torch import Tensor
+from torch.distributions import Distribution
+
+from Config import PPOConfig, device, LunarLanderConfig
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -300,4 +307,199 @@ class PPOAgent:
         """清理内存"""
         from Memory import MemoryManager
         MemoryManager.clearMemory()
+
+
+
+
+
+
+class ActorNetwork(nn.Module):
+    """Actor网络 - 策略网络"""
+
+    def __init__(self, inputShape: Tuple[int, int, int], numActions: int):
+        super().__init__()
+        self.numActions = numActions
+
+        # 特征提取层
+        self.convLayers = nn.Sequential(
+            nn.Conv2d(inputShape[0], 32, 8, 4, 1),
+            nn.ReLU(),
+            nn.Conv2d(32, 64, 4, 2, 1),
+            nn.ReLU(),
+            nn.Conv2d(64, 64, 3, 1, 0),
+            nn.ReLU(),
+        )
+
+        # 计算卷积层输出尺寸     使用torch.no_grad()上下文管理器，确保在这个代码块中不会计算梯度
+        with torch.no_grad():
+            # 创建一个全零的虚拟输入张量
+            dummyInput = torch.zeros(1, *inputShape)
+            # 将虚拟输入通过卷积层序列，得到卷积层输出
+            convOutput = self.convLayers(dummyInput)
+            # 计算展平后的特征数量
+            self.featureSize = convOutput.view(1, -1).size(1)
+
+        # 策略头
+        self.policyHead = nn.Sequential(
+            nn.Linear(self.featureSize, 512),
+            nn.ReLU(),
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.Linear(256, numActions)
+        )
+
+        self._initializeWeights()
+
+    def _initializeWeights(self):
+        """初始化权重"""
+        for module in self.modules():
+            if isinstance(module, nn.Conv2d):
+                nn.init.orthogonal_(module.weight, gain=np.sqrt(2))
+                nn.init.constant_(module.bias, 0)
+            elif isinstance(module, nn.Linear):
+                nn.init.orthogonal_(module.weight, gain=0.01)
+                nn.init.constant_(module.bias, 0)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """前向传播 - 返回动作logits"""
+        features = self.convLayers(x)
+        features = features.view(x.size(0), -1)
+        policyLogits = self.policyHead(features)
+        return policyLogits
+
+    def get_action_distribution(self, x: torch.Tensor) -> torch.distributions.Distribution:
+        """获取动作分布"""
+        policyLogits = self.forward(x)
+        # 注意在torch.distributions.Categorical方法的内部会自动进行softmax的, 然后返回那个概率最大的那个对象
+        # 例如下面这个例子
+        """
+            policyLogits = torch.tensor([2.0, 1.0, 0.0])  # 动作的"分数"
+            distribution = torch.distributions.Categorical(logits=policyLogits)
+            
+            # Categorical内部自动进行softmax
+            probs = F.softmax(policyLogits, dim=-1)  # [0.665, 0.244, 0.090]
+            
+            # 现在可以使用分布对象：
+            action = distribution.sample()      # 采样一个动作（如：0）
+            log_prob = distribution.log_prob(action)  # 计算该动作的对数概率
+        """
+        return torch.distributions.Categorical(logits=policyLogits)
+
+
+class CriticNetwork(nn.Module):
+    """Critic网络 - 价值网络"""
+
+    def __init__(self, inputShape: Tuple[int, int, int]):
+        super().__init__()
+
+        # 特征提取层 (与Actor共享结构)
+        self.convLayers = nn.Sequential(
+            nn.Conv2d(inputShape[0], 32, kernel_size=8, stride=4),
+            nn.ReLU(),
+            nn.Conv2d(32, 64, kernel_size=4, stride=2),
+            nn.ReLU(),
+            nn.Conv2d(64, 64, kernel_size=3, stride=1),
+            nn.ReLU()
+        )
+
+        # 计算卷积层输出尺寸
+        with torch.no_grad():
+            dummyInput = torch.zeros(1, *inputShape)
+            convOutput = self.convLayers(dummyInput)
+            self.featureSize = convOutput.view(1, -1).size(1)
+
+        # 价值头
+        self.valueHead = nn.Sequential(
+            nn.Linear(self.featureSize, 512),
+            nn.ReLU(),
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.Linear(256, 1)
+        )
+
+        self._initializeWeights()
+
+    def _initializeWeights(self):
+        """初始化权重"""
+        for module in self.modules():
+            if isinstance(module, nn.Conv2d):
+                nn.init.orthogonal_(module.weight, gain=np.sqrt(2))
+                nn.init.constant_(module.bias, 0)
+            elif isinstance(module, nn.Linear):
+                nn.init.orthogonal_(module.weight, gain=1.0)
+                nn.init.constant_(module.bias, 0)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """前向传播 - 返回状态价值"""
+        features = self.convLayers(x)
+        features = features.view(x.size(0), -1)
+        stateValues = self.valueHead(features)
+        return stateValues.squeeze(-1)
+
+
+
+
+
+
+class ActorCriticNetwork(nn.Module):
+    """Actor-Critic网络 - 结合策略和价值网络"""
+
+    def __init__(self, inputShape: Tuple[int, int, int], numActions: int):
+        super().__init__()
+        self.actor = ActorNetwork(inputShape, numActions)
+        self.critic = CriticNetwork(inputShape)
+
+    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        """前向传播 - 返回动作概率和状态价值"""
+        # 注意这里调用的是actor的forward方法，还没有经过softmax的
+        policyLogits = self.actor(x)
+        actionProbs = F.softmax(policyLogits, dim=-1)
+        stateValues = self.critic(x)
+        return actionProbs, stateValues
+    def get_action(self, state: torch.Tensor) -> tuple[Tensor, Tensor, Any, Distribution]:
+        """选择动作并返回相关信息"""
+        with torch.no_grad():
+            actionProbs = self.actor.get_action_distribution(state)
+            stateValues = self.critic(state)
+            action = actionProbs.sample()
+            logProb = actionProbs.log_prob(action)
+
+        return action, logProb, stateValues, actionProbs
+
+
+
+
+
+
+class LunarLanderPPOAgent:
+    """PPO智能体 - 结合上一版本的PPOAgent的Actor-Critic的思想，此版本还支持on-policy和off-policy训练"""
+    def __init__(self, stateShape: Tuple[int, int, int], numActions: int, config: LunarLanderConfig):
+        self.numActions = numActions
+        self.statesShape = stateShape
+        self.config = config
+
+        # 构建与初始化网络
+        self.netWork = ActorCriticNetwork(self.statesShape, self.numActions).to(device)
+
+        # 构建与初始化优化器
+        self.actorOptimizer = optim.Adam(
+            self.netWork.actor.parameters(),
+            lr = self.config.actorLearningRate,
+            eps=self.config.adamEpsilon
+        )
+        self.criticOptimizer = optim.Adam(
+            self.netWork.critic.parameters(),
+            lr = config.criticLearningRate,
+            eps=self.config.adamEpsilon
+        )
+
+        # 训练状态各变量的初始化
+        self.stepCompleted = 0
+        self.episodesCompleted = 0
+        self.currentEpoch = 0
+
+        logger.info(f"PPO智能体初始化完成: 状态形状={stateShape}, 动作数量={numActions}")
+
+
+
 

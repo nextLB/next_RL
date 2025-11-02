@@ -8,7 +8,7 @@ from typing import List, Dict, Tuple
 import torch
 
 from Config import PPOConfig, device, LunarLanderConfig
-from PPOAgent import PPOAgent
+from PPOAgent import PPOAgent, LunarLanderPPOAgent
 from Environment import AtariEnvironmentPreprocessor, EnvironmentRecorder, LunarLanderEnvironment
 from Experience import PPOBuffer
 from Memory import MemoryManager
@@ -330,8 +330,13 @@ class LunarLanderPPOTrainer:
         """训练PPO智能体"""
 
         # 首先可视化一下环境视频保存下来
-        self.environment.save_episode_videos()
-
+        # self.environment.save_episode_videos()
+        # 获取动作空间
+        numActions = self.environment.actionSpace.n
+        # 设置输入agent网络中的状态图片的尺寸
+        statesShape = (self.config.batchSize, self.config.screenSize, self.config.screenSize)
+        # 初始化与构建PPO的Agent
+        self.agent = LunarLanderPPOAgent(statesShape, numActions, self.config)
 
 
 

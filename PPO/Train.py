@@ -4,7 +4,8 @@ PPO训练主程序
 
 # V1.0  2025.10.28      --- by next, 初步实现了使用Renet深度学习模型架构的PPO强化学习模型的搭建与训练等
 # V1.1  2025.10.31      --- by next, 针对于V1.0的训练进行了整理和归类，便于以后的扩展等
-# V1.1  2025.11.1       --- by next,
+# V1.1  2025.11.1       --- by next, 结合先前PPO框架的Actor-Critic代码再加上PPO on policy与off policy的思想实现对Lunar Lander游戏的强化学习训练
+
 
 
 
@@ -73,7 +74,7 @@ def PPO_LunarLander_main():
         logger.info("开始PPO训练!")
         logger.info(f"使用设备: {device}")
 
-        # 实力化训练器对象
+        # 实例化训练器对象
         LLPPOTrainer = LunarLanderPPOTrainer(config)
         LLPPOTrainer.train()
 
