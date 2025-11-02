@@ -59,34 +59,27 @@ def PPO_PongNoFrameskip_v4_main():
 
 # 月球着陆游戏训练主程序
 def PPO_LunarLander_main():
-    try:
-        # 设置内存优化
-        if torch.cuda.is_available():
-            torch.backends.cudnn.benchmark = True
 
-        # 创建必要的目录
-        os.makedirs('./log', exist_ok=True)
-        os.makedirs('./PPO_models', exist_ok=True)
+    # 设置内存优化
+    if torch.cuda.is_available():
+        torch.backends.cudnn.benchmark = True
 
-        # 训练配置
-        config = LunarLanderConfig()
+    # 创建必要的目录
+    os.makedirs('./log', exist_ok=True)
+    os.makedirs('./PPO_models', exist_ok=True)
 
-        logger.info("开始PPO训练!")
-        logger.info(f"使用设备: {device}")
+    # 训练配置
+    config = LunarLanderConfig()
 
-        # 实例化训练器对象
-        LLPPOTrainer = LunarLanderPPOTrainer(config)
-        LLPPOTrainer.train()
+    logger.info("开始PPO训练!")
+    logger.info(f"使用设备: {device}")
+
+    # 实例化训练器对象
+    LLPPOTrainer = LunarLanderPPOTrainer(config)
+    LLPPOTrainer.train()
 
 
-    except KeyboardInterrupt:
-        logger.info("训练被用户中断")
-    except Exception as e:
-        logger.error(f"训练过程中发生错误: {e}")
-    finally:
-        # 最终清理
-        MemoryManager.clearMemory()
-        logger.info("程序执行完毕")
+
 
 
 

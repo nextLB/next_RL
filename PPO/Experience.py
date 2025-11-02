@@ -120,18 +120,22 @@ class LunarLanderExperienceBuffer:
         self.offPolicyBuffer = []
 
     def add_on_policy_experience(self,
+                                frame: np.ndarray,
                                state: np.ndarray,
                                action: int,
                                reward: float,
+                                nextFrame: np.ndarray,
                                nextState: np.ndarray,
                                done: bool,
                                logProb: float,
                                value: float):
         """添加On-policy经验"""
         experience = {
+            'frame': frame,
             'state': state,
             'action': action,
             'reward': reward,
+            'nextFrame': nextFrame,
             'nextState': nextState,
             'done': done,
             'logProb': logProb,
@@ -140,16 +144,20 @@ class LunarLanderExperienceBuffer:
         self.onPolicyBuffer.append(experience)
 
     def add_off_policy_experience(self,
+                                  frame: np.ndarray,
                                   state: np.ndarray,
                                   action: int,
                                   reward: float,
+                                  nextFrame: np.ndarray,
                                   nextState: np.ndarray,
                                   done: bool):
         """添加Off-policy经验"""
         experience = {
+            'frame': frame,
             'state': state,
             'action': action,
             'reward': reward,
+            'nextFrame': nextFrame,
             'nextState': nextState,
             'done': done
         }
@@ -162,20 +170,6 @@ class LunarLanderExperienceBuffer:
     def clear_on_policy_buffer(self):
         """清空On-policy缓冲区"""
         self.onPolicyBuffer.clear()
-
-    def get_on_policy_batch(self):
-        """获取On-policy数据"""
-        indices = np.random.choice(len(self.onPolicyBuffer), 1, replace=True)
-        return [self.onPolicyBuffer[i] for i in indices]
-
-    def get_off_policy_batch(self):
-        """获取Off-policy数据"""
-        if len(self.offPolicyBuffer) == 0:
-            return []
-        indices = np.random.choice(len(self.offPolicyBuffer),
-                                   min(1, len(self.offPolicyBuffer)),
-                                   replace=False)
-        return [self.offPolicyBuffer[i] for i in indices]
 
     def compute_advantages_and_returns(self,
                                        values: List[float],

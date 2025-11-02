@@ -51,9 +51,9 @@ class LunarLanderConfig:
     saveVideosSteps: int = 300
     screenSize: int = 240
     # 策略网络的学习率
-    actorLearningRate: float = 0.00025
+    actorLearningRate: float = 0.00001
     # 价值网络的学习率
-    criticLearningRate: float = 0.00025
+    criticLearningRate: float = 0.00001
     # 优化器的衰减系数
     adamEpsilon: float = 1e-5
     clipEpsilon: float = 0.1
@@ -67,6 +67,17 @@ class LunarLanderConfig:
     miniUpdateSize: int = 500
     gamma: float = 0.99
     gaeLambda: float = 0.95
+    # 策略内更新每次所需要的轮数
+    onPolicyEpochs: int = 20
+    # 策略外更新每次所需要的轮数
+    offPolicyEpochs: int = 20
+    # 策略外的更新频率
+    offPolicyUpdateFreq: int = 4
+    # 在策略外的目标网络的更新次数
+    targetUpdateInterval: int = 300
+    tau: float = 0.05
+    maxGradNorm: float = 0.5
+    valueLossCoeff: float = 0.5
 
 
 

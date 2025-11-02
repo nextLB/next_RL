@@ -11,6 +11,7 @@ from PPOAgent import PPOAgent, LunarLanderPPOAgent
 from Environment import AtariEnvironmentPreprocessor, EnvironmentRecorder, LunarLanderEnvironment
 from Experience import PPOBuffer, LunarLanderExperienceBuffer
 from Memory import MemoryManager
+from copy import deepcopy
 
 logger = logging.getLogger(__name__)
 
@@ -324,6 +325,7 @@ class LunarLanderPPOTrainer:
         self.environment = LunarLanderEnvironment(self.config)
         self.agent = None
         self.experienceBuffer = None
+        self.episodeRewards = []
 
     def train(self):
         """训练PPO智能体"""
@@ -363,6 +365,7 @@ class LunarLanderPPOTrainer:
             while not done:
                 # 获取当前状态下的游戏画面
                 grayFrame = self.environment.get_gray_frame()
+                originalGrayFrame = deepcopy(grayFrame)
                 grayFrame = torch.from_numpy(grayFrame).to(device)
                 # 扩充出一个通道属性维度
                 grayFrame = grayFrame.unsqueeze(0)
@@ -372,16 +375,16 @@ class LunarLanderPPOTrainer:
 
                 # 在交互式环境中执行动作
                 nextState, reward, done, info = self.environment.step(action.item())       # 将返回的动作张量转换为python整数   (.item()适用于单个元素的张量)
-
+                nextFrame = self.environment.get_gray_frame()
                 # 存储on-policy经验
                 self.experienceBuffer.add_on_policy_experience(
-                    state, action.item(), reward, nextState, done,
+                    originalGrayFrame, state, action.item(), reward, nextFrame, nextState, done,
                     logProb.item(), value.item()
                 )
 
                 # 存储off-policy经验
                 self.experienceBuffer.add_off_policy_experience(
-                    state, action.item(), reward, nextState, done
+                    originalGrayFrame, state, action.item(), reward, nextFrame, nextState, done
                 )
 
                 # 收集数据用于计算advantages
@@ -403,17 +406,39 @@ class LunarLanderPPOTrainer:
                     advantages, returns = self.experienceBuffer.compute_advantages_and_returns(
                         values, rewards, dones, self.config.gamma, self.config.gaeLambda
                     )
-
                     # 更新on-policy缓冲区中的advantages和returns
                     for i, exp in enumerate(self.experienceBuffer.onPolicyBuffer):
                         if i < len(advantages):
                             exp['advantage'] = advantages[i]
                             exp['return'] = returns[i]
+                        else:
+                            exp['advantage'] = 0
+                            exp['return'] = 0
 
                     # 执行更新agent
+                    stats = self.agent.update(self.experienceBuffer)
 
+                    # if stats:
+                    #     logger.info(f"Step {steps}, Stats: {stats}")
 
+                # # 定期保存
+                # if totalSteps % self.config.saveInterval == 0:
+                #     self._save_checkpoint(totalSteps)
 
+            # 记录episode结果
+            self.episodeRewards.append(episodeReward)
+            self.agent.episodesCompleted = episode
+
+            meanReward = np.mean(self.episodeRewards[-100:]) if len(self.episodeRewards) >= 100 else np.mean(self.episodeRewards)
+            logger.info(f"Episode {episode}, Steps: {steps}, Reward: {episodeReward:.2f}, "
+                        f"Mean Reward (100): {meanReward:.2f}")
+
+            # # 保存最佳模型
+            # if meanReward > self.bestMeanReward:
+            #     self.bestMeanReward = meanReward
+            #     self._save_checkpoint(totalSteps, best=True)
+
+        logger.info("训练完成!")
 
 
 

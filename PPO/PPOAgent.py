@@ -1,7 +1,9 @@
 """
 PPO智能体和网络结构
 """
-from pyexpat import features
+from numpy import floating
+
+from Experience import LunarLanderExperienceBuffer
 
 import torch
 import torch.nn as nn
@@ -480,6 +482,8 @@ class LunarLanderPPOAgent:
 
         # 构建与初始化网络
         self.netWork = ActorCriticNetwork(self.statesShape, self.numActions).to(device)
+        self.targetNetwork = ActorCriticNetwork(self.statesShape, self.numActions).to(device)
+        self.targetNetwork.load_state_dict(self.netWork.state_dict())
 
         # 构建与初始化优化器
         self.actorOptimizer = optim.Adam(
@@ -538,10 +542,10 @@ class LunarLanderPPOAgent:
     def compute_critic_loss(self, states: torch.Tensor, returns: torch.Tensor) -> Tuple[torch.Tensor, Dict[str, float]]:
         """计算Critic损失 (价值损失)"""
         values = self.netWork.critic(states)
-        valueLoss = F.mse_loss(values, returns)
 
-        # 进行价值裁剪
+        # 价值裁剪
         valuesClipped = returns + torch.clamp(values - returns, -self.config.clipEpsilon, self.config.clipEpsilon)
+        valueLoss = F.mse_loss(values, returns)
         valueLossClipped = F.mse_loss(valuesClipped, returns)
         valueLoss = torch.max(valueLoss, valueLossClipped)
 
@@ -561,16 +565,188 @@ class LunarLanderPPOAgent:
 
         return valueLoss, stats
 
-    def on_policy_update(self):
-        """On-policy更新"""
+    def on_policy_update(self, experienceBuffer) -> dict[Any, Any] | dict[Any, floating[Any]]:
+        """On-policy更新 - 使用当前策略收集的数据"""
+        if len(experienceBuffer.onPolicyBuffer) == 0:
+            return {}
+
+        # 准备数据
+        frames = torch.stack([torch.from_numpy(exp['frame']).float().to(device)
+                              for exp in experienceBuffer.onPolicyBuffer]).unsqueeze(1)
+        actions = torch.tensor([exp['action'] for exp in experienceBuffer.onPolicyBuffer],
+                               dtype=torch.long, device=device)
+        oldLogProbs = torch.tensor([exp['logProb'] for exp in experienceBuffer.onPolicyBuffer],
+                                   dtype=torch.float, device=device)
+        advantages = torch.tensor([exp['advantage'] for exp in experienceBuffer.onPolicyBuffer],
+                                  dtype=torch.float, device=device)
+        returns = torch.tensor([exp['return'] for exp in experienceBuffer.onPolicyBuffer],
+                               dtype=torch.float, device=device)
+
+        # 标准化优势函数
+        advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+
+        totalStats = {}
+
+        # 多轮更新
+        for epoch in range(self.config.onPolicyEpochs):
+            # 随机打乱数据
+            indices = torch.randperm(len(frames))
+
+            # 小批量更新
+            for start in range(0, len(frames), self.config.miniUpdateSize):
+                end = start + self.config.miniUpdateSize
+                batchIndices = indices[start:end]
+
+                batchFrames = frames[batchIndices]
+                batchActions = actions[batchIndices]
+                batchOldLogProbs = oldLogProbs[batchIndices]
+                batchAdvantages = advantages[batchIndices]
+                batchReturns = returns[batchIndices]
+
+                # 计算Actor损失
+                actorLoss, actorStats = self.compute_actor_loss(
+                    batchFrames, batchActions, batchOldLogProbs, batchAdvantages
+                )
+
+                # 计算Critic损失
+                criticLoss, criticStats = self.compute_critic_loss(batchFrames, batchReturns)
+
+                # 总损失
+                totalLoss = actorLoss + self.config.valueLossCoeff * criticLoss
+
+                # 反向传播
+                self.actorOptimizer.zero_grad()
+                self.criticOptimizer.zero_grad()
+                totalLoss.backward()
+
+                # 梯度裁剪
+                torch.nn.utils.clip_grad_norm_(self.netWork.actor.parameters(), self.config.maxGradNorm)
+                torch.nn.utils.clip_grad_norm_(self.netWork.critic.parameters(), self.config.maxGradNorm)
+
+                # 更新参数
+                self.actorOptimizer.step()
+                self.criticOptimizer.step()
+
+                # 收集统计信息
+                for key, value in {**actorStats, **criticStats}.items():
+                    if key not in totalStats:
+                        totalStats[key] = []
+                    totalStats[key].append(value)
+
+        # 计算平均统计信息
+        avgStats = {key: np.mean(values) for key, values in totalStats.items()}
+        avgStats['on_policy_update_epochs'] = self.config.onPolicyEpochs
+
+        # 清空on-policy缓冲区
+        experienceBuffer.clear_on_policy_buffer()
+
+        return avgStats
+
+    def off_policy_update(self, experienceBuffer) -> Dict[str, float]:
+        """Off-policy更新 - 使用经验回放缓冲区的数据"""
+        if len(experienceBuffer.offPolicyBuffer) < self.config.offPolicyEpochs:
+            return {}
+
+        # 随机采样
+        indices = np.random.choice(len(experienceBuffer.offPolicyBuffer),
+                                   self.config.offPolicyEpochs, replace=False)
+
+        batch = [experienceBuffer.offPolicyBuffer[i] for i in indices]
 
 
-    def off_policy_update(self):
-        """Off-policy更新"""
+        # 准备数据
+        frames = torch.stack([torch.from_numpy(exp['frame']).float().to(device)
+                              for exp in batch]).unsqueeze(1)
+        actions = torch.tensor([exp['action'] for exp in batch],
+                               dtype=torch.long, device=device)
+        rewards = torch.tensor([exp['reward'] for exp in batch],
+                               dtype=torch.float, device=device)
+        nextFrames = torch.stack([torch.from_numpy(exp['nextFrame']).float().to(device)
+                                  for exp in batch]).unsqueeze(1)
+        dones = torch.tensor([exp['done'] for exp in batch],
+                             dtype=torch.bool, device=device)
 
-    def update(self, onPolicyBuffer, offPolicyBuffer):
+
+        # 计算目标Q值
+        with torch.no_grad():
+            nextValues = self.targetNetwork.critic(nextFrames)
+            targetReturns = rewards + self.config.gamma * nextValues * (~dones).float()
+
+        # 计算当前值
+        currentValues = self.netWork.critic(frames)
+
+        # TD误差
+        tdErrors = targetReturns - currentValues
+
+        # 计算Critic损失
+        criticLoss = F.mse_loss(currentValues, targetReturns)
+
+        # 计算Actor损失（使用TD误差作为优势函数的近似）
+        policyLogits = self.netWork.actor(frames)
+        dist = torch.distributions.Categorical(logits=policyLogits)
+        logProbs = dist.log_prob(actions)
+        entropy = dist.entropy().mean()
+
+        # 策略梯度损失
+        policyLoss = -(logProbs * tdErrors.detach()).mean()
+
+        # 总损失（包含熵正则化）
+        totalLoss = (policyLoss +
+                     self.config.valueLossCoeff * criticLoss -
+                     self.config.entropyCoeff * entropy)
+
+        # 反向传播
+        self.actorOptimizer.zero_grad()
+        self.criticOptimizer.zero_grad()
+        totalLoss.backward()
+
+        # 梯度裁剪
+        torch.nn.utils.clip_grad_norm_(self.netWork.actor.parameters(), self.config.maxGradNorm)
+        torch.nn.utils.clip_grad_norm_(self.netWork.critic.parameters(), self.config.maxGradNorm)
+
+        # 更新参数
+        self.actorOptimizer.step()
+        self.criticOptimizer.step()
+
+        # 目标网络软更新
+        self.soft_update_target_network()
+
+        # 收集统计信息
+        stats = {
+            'off_policy_policy_loss': policyLoss.item(),
+            'off_policy_value_loss': criticLoss.item(),
+            'off_policy_entropy': entropy.item(),
+            'off_policy_td_error_mean': tdErrors.mean().item(),
+            'off_policy_batch_size': self.config.offPolicyEpochs
+        }
+
+        return stats
+
+    def soft_update_target_network(self):
+        """软更新目标网络"""
+        for targetParam, param in zip(self.targetNetwork.parameters(), self.netWork.parameters()):
+            targetParam.data.copy_(
+                self.config.tau * param.data + (1.0 - self.config.tau) * targetParam.data
+            )
+
+    def update(self, experienceBuffer) -> Dict[str, float]:
         """组合更新 - 支持on-policy和off-policy"""
+        stats = {}
 
+        # On-policy更新
+        if len(experienceBuffer.onPolicyBuffer) >= self.config.miniUpdateSize:
+            onPolicyStats = self.on_policy_update(experienceBuffer)
+            stats.update(onPolicyStats)
+
+        # Off-policy更新（每隔一定步数执行一次）
+        if (self.stepCompleted % self.config.offPolicyUpdateFreq == 0 and
+                len(experienceBuffer.offPolicyBuffer) >= self.config.offPolicyEpochs):
+            offPolicyStats = self.off_policy_update(experienceBuffer)
+            stats.update(offPolicyStats)
+
+        self.stepCompleted += 1
+
+        return stats
 
 
 
