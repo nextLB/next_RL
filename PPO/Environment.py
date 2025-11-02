@@ -251,6 +251,7 @@ class EnvironmentRecorder:
 # 月球着陆游戏的环境包装器
 class LunarLanderEnvironment(object):
     def __init__(self, config: LunarLanderConfig):
+        self.frameSize = config.screenSize
         self.environmentName = config.environmentName
         self.environment = gym.make(self.environmentName, render_mode='rgb_array')
         self.saveEnvironmentVideosPath = config.saveVideosPath
@@ -354,6 +355,7 @@ class LunarLanderEnvironment(object):
 
         # 调整大小
         img = Image.fromarray(frame.astype(np.uint8))
+        img = img.resize((self.frameSize, self.frameSize), Image.BILINEAR)
         frame = np.array(img)
 
         # 归一化到 [0, 1]

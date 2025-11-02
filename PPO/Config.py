@@ -50,7 +50,6 @@ class LunarLanderConfig:
     saveVideosEpisode: int = 5
     saveVideosSteps: int = 300
     screenSize: int = 240
-    batchSize: int = 32
     # 策略网络的学习率
     actorLearningRate: float = 0.00025
     # 价值网络的学习率
@@ -64,6 +63,10 @@ class LunarLanderConfig:
     bufferSize: int = 10000
     # 训练的总轮数设定
     trainingEpisode: int = 1000
+    # 经验缓冲区中最小的经验数量，依照这个判断是否进行学习
+    miniUpdateSize: int = 500
+    gamma: float = 0.99
+    gaeLambda: float = 0.95
 
 
 

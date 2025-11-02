@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import logging
 from typing import List, Dict, Tuple
 import torch
-
 from Config import PPOConfig, device, LunarLanderConfig
 from PPOAgent import PPOAgent, LunarLanderPPOAgent
 from Environment import AtariEnvironmentPreprocessor, EnvironmentRecorder, LunarLanderEnvironment
@@ -335,8 +334,8 @@ class LunarLanderPPOTrainer:
         numActions = self.environment.actionSpace.n
         # 获取状态(观测)空间        暂时似乎还没有用处
         numObservations = self.environment.observationSpace
-        # 设置输入agent网络中的状态图片的尺寸
-        statesShape = (self.config.batchSize, self.config.screenSize, self.config.screenSize)
+        # 设置输入agent网络中的状态图片的尺寸      这里目前设置的是传入网络内部的是灰度图
+        statesShape = (1, self.config.screenSize, self.config.screenSize)
         # 初始化与构建PPO的Agent
         self.agent = LunarLanderPPOAgent(statesShape, numActions, self.config)
         # 初始化LunarLander游戏的经验缓冲池
@@ -359,6 +358,62 @@ class LunarLanderPPOTrainer:
             values = []
             logProbs = []
             dones = []
+
+            # 本回合还没结束，就一直进行下去
+            while not done:
+                # 获取当前状态下的游戏画面
+                grayFrame = self.environment.get_gray_frame()
+                grayFrame = torch.from_numpy(grayFrame).to(device)
+                # 扩充出一个通道属性维度
+                grayFrame = grayFrame.unsqueeze(0)
+
+                # 将当前的状态输入到网络中，进行下一步动作的选择
+                action, logProb, value, actionProbs = self.agent.netWork.get_action(grayFrame)
+
+                # 在交互式环境中执行动作
+                nextState, reward, done, info = self.environment.step(action.item())       # 将返回的动作张量转换为python整数   (.item()适用于单个元素的张量)
+
+                # 存储on-policy经验
+                self.experienceBuffer.add_on_policy_experience(
+                    state, action.item(), reward, nextState, done,
+                    logProb.item(), value.item()
+                )
+
+                # 存储off-policy经验
+                self.experienceBuffer.add_off_policy_experience(
+                    state, action.item(), reward, nextState, done
+                )
+
+                # 收集数据用于计算advantages
+                states.append(state)
+                actions.append(action.item())
+                rewards.append(reward)
+                values.append(value.item())
+                logProbs.append(logProb.item())
+                dones.append(done)
+
+                state = nextState
+                episodeReward += reward
+                steps += 1
+
+                # 满足经验池数量的限制，就开始学习与更新
+                if len(self.experienceBuffer.onPolicyBuffer) >= self.config.miniUpdateSize:
+
+                    # 计算advantages和returns
+                    advantages, returns = self.experienceBuffer.compute_advantages_and_returns(
+                        values, rewards, dones, self.config.gamma, self.config.gaeLambda
+                    )
+
+                    # 更新on-policy缓冲区中的advantages和returns
+                    for i, exp in enumerate(self.experienceBuffer.onPolicyBuffer):
+                        if i < len(advantages):
+                            exp['advantage'] = advantages[i]
+                            exp['return'] = returns[i]
+
+                    # 执行更新agent
+
+
+
 
 
 
