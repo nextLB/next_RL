@@ -17,7 +17,6 @@ class V1_2_DQNTrainer:
 
     def train(self):
 
-
         # 训练统计
         episodeRewards = []
         episodeLosses = []
@@ -39,7 +38,9 @@ class V1_2_DQNTrainer:
                     state = torch.unsqueeze(state, 0)
                 state = state.to(self.config.device)
                 action = self.agent.selectAction(state)
+                # 输入的环境中进行交互，返回信息
                 nextState, reward, done, info = self.environment.step(action)
+                # 添加到经验池中
                 self.experience.push(state, action, reward, nextState, done)
                 # 优化模型
                 loss = self.agent.optimizeModel(self.experience)
@@ -61,18 +62,18 @@ class V1_2_DQNTrainer:
             episodeLosses.append(averageLoss)
             epsilonHistory.append(self.agent.getCurrentEpsilon())
 
-            # 计算移动平均奖励
+            # 计算移动平均奖励  五十个回合内的
             if len(episodeRewards) >= 50:
                 movingAverage = np.mean(episodeRewards[-50:])
             else:
                 movingAverage = np.mean(episodeRewards)
             movingAverageRewards.append(movingAverage)
 
-            # 更新最佳模型
-            if movingAverage > bestAverageReward and len(episodeRewards) >= 20:
+            # 保存更新最佳模型
+            if movingAverage > bestAverageReward:
                 bestAverageReward = movingAverage
                 self.agent.saveCheckpoint(
-                    f"./DQN_models/best_model.pth"
+                    f"./RL_models/DQN_models/best_model.pth"
                 )
 
             # 定期日志输出

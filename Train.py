@@ -49,7 +49,7 @@ class TrainingConfig:
     trainingEpisodes: int = 1000
     initialEpsilon: float = 1.0
     finalEpsilon: float = 0.01
-    epsilonDecaySteps: int = 100000
+    epsilonDecaySteps: int = 1000000
     replayBufferCapacity: int = 10000
     discountFactor: float = 0.99
     targetUpdateFrequency: int = 300

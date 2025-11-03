@@ -187,13 +187,23 @@ class V1_2_DQNAgent:
 
     def getTrainingStatistics(self) -> dict:
         """获取训练统计信息"""
-
         return {
             'stepsCompleted': self.stepsCompleted,
             'episodesCompleted': self.episodesCompleted,
             'currentEpsilon': self.getCurrentEpsilon(),
         }
 
+    def saveCheckpoint(self, filePath: str) -> None:
+        """保存模型检查点"""
+        checkpoint = {
+            'policyNetworkState': self.policyNetwork.state_dict(),
+            'targetNetworkState': self.targetNetwork.state_dict(),
+            'optimizerState': self.optimizer.state_dict(),
+            'stepsCompleted': self.stepsCompleted,
+            'episodesCompleted': self.episodesCompleted,
+            'config': self.config
+        }
+        torch.save(checkpoint, filePath)
 
 
 
