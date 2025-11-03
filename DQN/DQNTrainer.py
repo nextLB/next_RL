@@ -30,6 +30,7 @@ class V1_2_DQNTrainer:
             stepsInEpisode = 0
             totalLoss = 0.0
             lossCount = 0
+            loss = 0
 
             while True:
                 if not isinstance(state, torch.Tensor):
@@ -42,11 +43,15 @@ class V1_2_DQNTrainer:
                 nextState, reward, done, info = self.environment.step(action)
                 # 添加到经验池中
                 self.experience.push(state, action, reward, nextState, done)
-                # 优化模型
-                loss = self.agent.optimizeModel(self.experience)
-                if loss > 0:
-                    totalLoss += loss
-                    lossCount += 1
+
+                # 满足一定经验池的数量限制后再进行优化模型
+                if len(self.experience.buffer) >= self.config.replayBufferCapacity:
+                    # 优化模型
+                    loss = self.agent.optimizeModel(self.experience)
+
+
+                totalLoss += loss
+                lossCount += 1
                 state = nextState
                 totalReward += reward
                 stepsInEpisode += 1

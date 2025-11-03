@@ -1,116 +1,44 @@
 """
-DQN模型实时推理可视化程序 - 修复版本
+    调用训练的模型进行实时推理可视化的主程序
 """
 
+
+from Train import TrainingConfig
+from DQN.DQNAgent import ResNetDeepQNetwork
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import gymnasium as gym
 from PIL import Image
-import time
-from dataclasses import dataclass
-from typing import Tuple
+
+# 处理 NumPy 2.0 不兼容问题
+def fix_numpy_compatibility():
+    """修复 NumPy 2.0 兼容性问题"""
+    numpy_version = np.__version__
+    print(f"NumPy version: {numpy_version}")
+
+    # 为旧代码提供向后兼容
+    if not hasattr(np, 'Inf'):
+        np.Inf = np.inf
+    if not hasattr(np, 'float128'):
+        np.float128 = np.longdouble
+    if not hasattr(np, 'float96'):
+        np.float96 = np.longdouble
+
+# 在导入其他库之前应用修复
+fix_numpy_compatibility()
 
 
-@dataclass
-class TrainingConfig:
-    """训练配置参数（与训练代码保持一致）"""
-    version: str = "V1.2"
-    environmentName: str = "PongNoFrameskip-v4"
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    imageShape: Tuple[int, int, int] = (1, 120, 120)
-    numActions: int = 6
-    learningRate: float = 0.00025
-    trainingEpisodes: int = 1000
-    initialEpsilon: float = 1.0
-    finalEpsilon: float = 0.01
-    epsilonDecaySteps: int = 100000
-    replayBufferCapacity: int = 10000
-    discountFactor: float = 0.99
-    targetUpdateFrequency: int = 300
 
-
-class ResidualBlock(torch.nn.Module):
-    def __init__(self, inChannels: int, outChannels: int, stride: int = 1):
-        super().__init__()
-        self.conv1 = torch.nn.Conv2d(inChannels, outChannels, kernel_size=3, stride=stride, padding=1, bias=False)
-        self.bn1 = torch.nn.BatchNorm2d(outChannels)
-        self.conv2 = torch.nn.Conv2d(outChannels, outChannels, kernel_size=3, stride=1, padding=1, bias=False)
-        self.bn2 = torch.nn.BatchNorm2d(outChannels)
-
-        self.shortcut = torch.nn.Sequential()
-        if stride != 1 or inChannels != outChannels:
-            self.shortcut = torch.nn.Sequential(
-                torch.nn.Conv2d(inChannels, outChannels, kernel_size=1, stride=stride, bias=False),
-                torch.nn.BatchNorm2d(outChannels)
-            )
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        residual = x
-        out = torch.nn.functional.relu(self.bn1(self.conv1(x)))
-        out = self.bn2(self.conv2(out))
-        residual = self.shortcut(residual)
-        out += residual
-        out = torch.nn.functional.relu(out)
-        return out
-
-
-class ResNetDeepQNetwork(torch.nn.Module):
-    def __init__(self, inputShape, numActions):
-        super(ResNetDeepQNetwork, self).__init__()
-        self.conv1 = torch.nn.Conv2d(inputShape[0], 64, 3, 1, 1)
-        self.bn1 = torch.nn.BatchNorm2d(64)
-
-        self.layer1 = self.makeLayer(64, 64, 2, stride=1)
-        self.layer2 = self.makeLayer(64, 128, 2, stride=2)
-        self.layer3 = self.makeLayer(128, 256, 2, stride=2)
-        self.layer4 = self.makeLayer(256, 512, 2, stride=2)
-
-        self.adaptiveAvgPool = torch.nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = torch.nn.Linear(512, numActions)
-
-        self.initializeWeights()
-
-    def makeLayer(self, inChannels: int, outChannels: int, numBlocks: int, stride: int) -> torch.nn.Sequential:
-        strides = [stride] + [1] * (numBlocks - 1)
-        layers = []
-        for currentStride in strides:
-            layers.append(ResidualBlock(inChannels, outChannels, currentStride))
-            inChannels = outChannels
-        return torch.nn.Sequential(*layers)
-
-    def initializeWeights(self):
-        for module in self.modules():
-            if isinstance(module, torch.nn.Conv2d):
-                torch.nn.init.kaiming_normal_(module.weight, mode='fan_out', nonlinearity='relu')
-            elif isinstance(module, torch.nn.BatchNorm2d):
-                torch.nn.init.constant_(module.weight, 1)
-                torch.nn.init.constant_(module.bias, 0)
-            elif isinstance(module, torch.nn.Linear):
-                torch.nn.init.normal_(module.weight, 0, 0.01)
-                torch.nn.init.constant_(module.bias, 0)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = torch.nn.functional.relu(self.bn1(self.conv1(x)))
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
-        x = self.adaptiveAvgPool(x)
-        x = x.view(x.size(0), -1)
-        x = self.fc(x)
-        return x
-
-
-class DQNInferenceVisualizer:
-    def __init__(self, modelPath, environmentName="PongNoFrameskip-v4"):
+class V1_2_DQNInference_Visualizer:
+    def __init__(self, modelPath, config):
+        self.config = config
         self.modelPath = modelPath
-        self.environmentName = environmentName
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # 初始化环境
-        self.env = gym.make(self.environmentName, render_mode='rgb_array')
+        self.env = gym.make(self.config.environmentName, render_mode='rgb_array')
         self.numActions = self.env.action_space.n
         self.imageShape = (1, 120, 120)
 
@@ -159,40 +87,16 @@ class DQNInferenceVisualizer:
 
     def loadModel(self):
         """加载训练好的DQN模型 - 修复版本"""
-        try:
-            # 创建网络结构
-            model = ResNetDeepQNetwork(self.imageShape, self.numActions).to(self.device)
+        # 创建网络结构
+        model = ResNetDeepQNetwork(self.imageShape, self.numActions).to(self.device)
 
-            # 使用 weights_only=False 来加载包含自定义类的检查点
-            checkpoint = torch.load(self.modelPath, map_location=self.device, weights_only=False)
+        # 使用 weights_only=False 来加载包含自定义类的检查点
+        checkpoint = torch.load(self.modelPath, map_location=self.device, weights_only=False)
 
-            # 加载网络权重
-            model.load_state_dict(checkpoint['policyNetworkState'])
-            print("Model loaded successfully!")
-            return model
-
-        except Exception as e:
-            print(f"Error loading model: {e}")
-            print("Trying alternative loading method...")
-
-            # 备用加载方法
-            try:
-                model = ResNetDeepQNetwork(self.imageShape, self.numActions).to(self.device)
-
-                # 使用更宽松的加载方式
-                checkpoint = torch.load(
-                    self.modelPath,
-                    map_location=self.device,
-                    weights_only=False,
-                    pickle_module=__import__('pickle')
-                )
-
-                model.load_state_dict(checkpoint['policyNetworkState'])
-                print("Model loaded successfully with alternative method!")
-                return model
-            except Exception as e2:
-                print(f"Alternative loading also failed: {e2}")
-                raise
+        # 加载网络权重
+        model.load_state_dict(checkpoint['policyNetworkState'])
+        print("Model loaded successfully!")
+        return model
 
     def preprocessFrame(self, frame):
         """预处理游戏帧（与训练时保持一致）"""
@@ -317,58 +221,18 @@ Current Q-values:
         plt.close('all')
 
 
-def createDummyModelIfNotExists(modelPath):
-    """如果模型文件不存在，创建一个虚拟模型用于测试"""
-    import os
-    if not os.path.exists(modelPath):
-        print(f"Model file not found at {modelPath}, creating dummy model for testing...")
-
-        # 创建目录
-        os.makedirs(os.path.dirname(modelPath), exist_ok=True)
-
-        # 创建配置
-        config = TrainingConfig()
-
-        # 创建模型
-        model = ResNetDeepQNetwork(config.imageShape, config.numActions)
-
-        # 创建检查点
-        checkpoint = {
-            'policyNetworkState': model.state_dict(),
-            'targetNetworkState': model.state_dict(),
-            'optimizerState': None,
-            'stepsCompleted': 0,
-            'episodesCompleted': 0,
-            'config': config
-        }
-
-        # 保存模型
-        torch.save(checkpoint, modelPath)
-        print(f"Dummy model created at {modelPath}")
 
 
 def main():
-    # 模型路径
-    modelPath = "./RL_models/DQN_models/best_model.pth"
+    # 调用DQN模型进行推理可视化    V1.2版本
+    modelPath = './RL_models/DQN_models/best_model.pth'
+    # 创建可视化器
+    visualizer = V1_2_DQNInference_Visualizer(modelPath, TrainingConfig)
 
-    # 如果模型不存在，创建虚拟模型
-    createDummyModelIfNotExists(modelPath)
-
-    try:
-        # 创建可视化器
-        visualizer = DQNInferenceVisualizer(modelPath)
-
-        # 运行推理可视化
-        visualizer.runInference(maxSteps=1000)
-
-    except Exception as e:
-        print(f"Error during inference: {e}")
-        import traceback
-        traceback.print_exc()
-    finally:
-        if 'visualizer' in locals():
-            visualizer.close()
+    # 运行推理可视化
+    visualizer.runInference(maxSteps=1000)
 
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     main()
