@@ -1,5 +1,5 @@
 """
-主训练程序
+    主训练程序
 """
 
 
@@ -9,17 +9,76 @@
 
 
 from dataclasses import dataclass
+from game_environment.PongNoFrameskip_v4_environment import PNFSV4Environment
+import torch
+import logging
+import os
+from DQN.DQNTrainer import V1_2_DQNTrainer
+from DQN.DQNAgent import V1_2_DQNAgent
+
+
+
+def setupLogging():
+    """配置日志"""
+    logDir = './log'
+    if not os.path.exists(logDir):
+        os.makedirs(logDir)
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(os.path.join(logDir, 'DQNTrain.log'), mode='w'),
+            logging.StreamHandler()
+        ]
+    )
+    return logging.getLogger(__name__)
+
 
 
 @dataclass
 class TrainingConfig:
     """训练配置参数"""
+    version: str = "V1.2"
     environmentName: str = "PongNoFrameskip-v4"
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+
+# 进行DQN模型的训练
+def Train_DQN():
+    # 创建日志类
+    logger = setupLogging()
+
+    # 创建配置类
+    config = TrainingConfig()
+
+    # 设置内存优化
+    if torch.cuda.is_available():
+        torch.backends.cudnn.benchmark = True
+
+    # 初始化环境类
+    if config.environmentName == "PongNoFrameskip-v4":
+        environment = PNFSV4Environment(config)
+    else:
+        environment = PNFSV4Environment(config)
+
+    # 按照版本号进行后续的流程
+    if config.version == "V1.2":
+        # 初始化Agent
+        DQNAgent = V1_2_DQNAgent(config)
+
+        # 初始化训练类
+        DQNTrainer = V1_2_DQNTrainer(environment, DQNAgent, config)
+
+
+
+
 
 
 
 def main():
     # 进行DQN模型的训练
+    Train_DQN()
 
 
 
