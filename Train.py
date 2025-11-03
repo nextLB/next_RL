@@ -41,6 +41,7 @@ class TrainingConfig:
     version: str = "V1.2"
     environmentName: str = "PongNoFrameskip-v4"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    imageSize: int = 120
 
 
 

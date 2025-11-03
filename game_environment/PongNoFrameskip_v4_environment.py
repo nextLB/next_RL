@@ -2,9 +2,54 @@
     关于PongNoFrameskip-v4这个游戏环境的搭建程序文件
 """
 
+import numpy as np
+from PIL import Image
+import gymnasium as gym
 
 
 class PNFSV4Environment:
     def __init__(self, config):
         self.environmentName = "PongNoFrameskip-v4"
+        self.config = config
+        self.env = gym.make(self.config.environmentName, render_mode='rgb_array')
 
+    # 对于Pong游戏的图像帧进行预处理
+    def preprocess_frame(self, frame):
+        # 转换为灰度图
+        if len(frame.shape) == 3:
+            frame = np.mean(frame, axis=2)  # 使用numpy提高效率
+
+        # 调整大小
+        img = Image.fromarray(frame.astype(np.uint8))
+        img = img.resize((self.config.imageSize, self.config.imageSize), Image.BILINEAR)
+        frame = np.array(img)
+
+        # 归一化到 [0, 1]
+        frame = frame.astype(np.float32) / 255.0
+
+        return frame
+
+    # 重置环境并返回预处理后的初始状态帧
+    def reset(self):
+        state, info = self.env.reset()
+        processedState = self.preprocess_frame(state)
+        return processedState, info
+
+    # 执行动作并返回预处理后的结果
+    def step(self, action):
+        nextState, reward, terminated, truncated, info = self.env.step(action)
+        done = terminated or truncated
+        processedNextState = self.preprocess_frame(nextState)
+        return processedNextState, reward, done, info
+
+    @property
+    def actionSpace(self):
+        return self.env.action_space
+
+    @property
+    def observationSpace(self):
+        return self.env.observation_space
+
+    def close(self) -> None:
+        """关闭环境"""
+        self.env.close()
