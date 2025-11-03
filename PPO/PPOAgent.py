@@ -332,11 +332,7 @@ class ActorNetwork(nn.Module):
             nn.ReLU(),
             nn.Conv2d(128, 256, 3, 1, 0),
             nn.ReLU(),
-            nn.Conv2d(256, 512, 3, 1, 0),
-            nn.ReLU(),
-            nn.Conv2d(512, 1024, 3, 1, 0),
-            nn.ReLU(),
-            nn.Conv2d(1024, 512, 3, 1, 0),
+            nn.Conv2d(256, 128, 3, 1, 0),
             nn.ReLU(),
         )
 
@@ -420,11 +416,7 @@ class CriticNetwork(nn.Module):
             nn.ReLU(),
             nn.Conv2d(128, 256, 3, 1, 0),
             nn.ReLU(),
-            nn.Conv2d(256, 512, 3, 1, 0),
-            nn.ReLU(),
-            nn.Conv2d(512, 1024, 3, 1, 0),
-            nn.ReLU(),
-            nn.Conv2d(1024, 512, 3, 1, 0),
+            nn.Conv2d(256, 128, 3, 1, 0),
             nn.ReLU(),
         )
 

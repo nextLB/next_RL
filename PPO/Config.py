@@ -49,7 +49,7 @@ class LunarLanderConfig:
     saveVideosPath: str = "./record/LunarLander"
     saveVideosEpisode: int = 5
     saveVideosSteps: int = 300
-    screenSize: int = 240
+    screenSize: int = 120
     # 策略网络的学习率
     actorLearningRate: float = 0.0003
     # 价值网络的学习率
@@ -64,7 +64,7 @@ class LunarLanderConfig:
     # 训练的总轮数设定
     trainingEpisode: int = 2000
     # 经验缓冲区中最小的经验数量，依照这个判断是否进行学习
-    miniUpdateSize: int = 2000
+    miniUpdateSize: int = 200
     gamma: float = 0.99
     gaeLambda: float = 0.95
     # 策略内更新每次所需要的轮数

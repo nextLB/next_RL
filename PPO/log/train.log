@@ -874,3 +874,243 @@
 2025-11-03 01:41:32,467 - INFO - 使用设备: cuda
 2025-11-03 01:41:52,881 - INFO - PPO智能体初始化完成: 状态形状=(1, 240, 240), 动作数量=4
 2025-11-03 01:41:55,745 - INFO - Episode 1, Steps: 82, Reward: -188.47, Mean Reward (100): -188.47
+2025-11-03 01:41:58,646 - INFO - Episode 2, Steps: 99, Reward: -274.32, Mean Reward (100): -231.40
+2025-11-03 01:42:00,823 - INFO - Episode 3, Steps: 79, Reward: -337.47, Mean Reward (100): -266.75
+2025-11-03 01:42:03,225 - INFO - Episode 4, Steps: 87, Reward: -31.96, Mean Reward (100): -208.05
+2025-11-03 01:42:05,673 - INFO - Episode 5, Steps: 89, Reward: -419.28, Mean Reward (100): -250.30
+2025-11-03 01:42:07,802 - INFO - Episode 6, Steps: 77, Reward: -78.95, Mean Reward (100): -221.74
+2025-11-03 01:42:09,740 - INFO - Episode 7, Steps: 70, Reward: -93.94, Mean Reward (100): -203.48
+2025-11-03 01:42:12,526 - INFO - Episode 8, Steps: 95, Reward: -194.16, Mean Reward (100): -202.32
+2025-11-03 01:42:14,837 - INFO - Episode 9, Steps: 83, Reward: -131.50, Mean Reward (100): -194.45
+2025-11-03 01:42:17,079 - INFO - Episode 10, Steps: 81, Reward: -246.60, Mean Reward (100): -199.66
+2025-11-03 01:42:19,086 - INFO - Episode 11, Steps: 72, Reward: -299.78, Mean Reward (100): -208.77
+2025-11-03 01:42:22,172 - INFO - Episode 12, Steps: 109, Reward: -128.14, Mean Reward (100): -202.05
+2025-11-03 01:42:24,090 - INFO - Episode 13, Steps: 68, Reward: -106.15, Mean Reward (100): -194.67
+2025-11-03 01:42:28,209 - INFO - Episode 14, Steps: 137, Reward: -360.67, Mean Reward (100): -206.53
+2025-11-03 01:42:30,671 - INFO - Episode 15, Steps: 84, Reward: -142.10, Mean Reward (100): -202.23
+2025-11-03 01:42:33,347 - INFO - Episode 16, Steps: 87, Reward: -89.91, Mean Reward (100): -195.21
+2025-11-03 01:42:36,141 - INFO - Episode 17, Steps: 93, Reward: -108.71, Mean Reward (100): -190.12
+2025-11-03 01:42:38,581 - INFO - Episode 18, Steps: 87, Reward: -418.77, Mean Reward (100): -202.83
+2025-11-03 01:42:40,488 - INFO - Episode 19, Steps: 69, Reward: -66.18, Mean Reward (100): -195.64
+2025-11-03 01:42:42,658 - INFO - Episode 20, Steps: 79, Reward: -42.11, Mean Reward (100): -187.96
+2025-11-03 01:42:45,571 - INFO - Episode 21, Steps: 106, Reward: -258.12, Mean Reward (100): -191.30
+2025-11-03 01:42:48,645 - INFO - Episode 22, Steps: 112, Reward: -295.06, Mean Reward (100): -196.02
+2025-11-03 11:13:06,426 - INFO - 日志系统初始化完成
+2025-11-03 11:13:07,943 - INFO - 开始PPO训练!
+2025-11-03 11:13:07,943 - INFO - 使用设备: cuda
+2025-11-03 11:13:22,354 - INFO - PPO智能体初始化完成: 状态形状=(1, 240, 240), 动作数量=4
+2025-11-03 11:13:26,027 - INFO - Episode 1, Steps: 107, Reward: -354.67, Mean Reward (100): -354.67
+2025-11-03 11:13:28,546 - INFO - Episode 2, Steps: 97, Reward: -411.20, Mean Reward (100): -382.93
+2025-11-03 11:13:30,579 - INFO - Episode 3, Steps: 79, Reward: -217.16, Mean Reward (100): -327.67
+2025-11-03 11:13:32,615 - INFO - Episode 4, Steps: 79, Reward: -81.37, Mean Reward (100): -266.10
+2025-11-03 11:13:35,779 - INFO - Episode 5, Steps: 122, Reward: -286.53, Mean Reward (100): -270.18
+2025-11-03 11:13:38,607 - INFO - Episode 6, Steps: 92, Reward: -404.40, Mean Reward (100): -292.55
+2025-11-03 11:13:42,071 - INFO - Episode 7, Steps: 124, Reward: -25.08, Mean Reward (100): -254.34
+2025-11-03 11:13:44,231 - INFO - Episode 8, Steps: 74, Reward: -304.50, Mean Reward (100): -260.61
+2025-11-03 11:13:47,011 - INFO - Episode 9, Steps: 92, Reward: -141.60, Mean Reward (100): -247.39
+2025-11-03 11:13:49,286 - INFO - Episode 10, Steps: 83, Reward: -223.15, Mean Reward (100): -244.96
+2025-11-03 11:13:51,333 - INFO - Episode 11, Steps: 74, Reward: -359.31, Mean Reward (100): -255.36
+2025-11-03 11:13:53,454 - INFO - Episode 12, Steps: 79, Reward: -172.78, Mean Reward (100): -248.48
+2025-11-03 11:13:55,800 - INFO - Episode 13, Steps: 87, Reward: -164.75, Mean Reward (100): -242.04
+2025-11-03 11:13:58,684 - INFO - Episode 14, Steps: 108, Reward: -106.32, Mean Reward (100): -232.34
+2025-11-03 11:14:01,163 - INFO - Episode 15, Steps: 93, Reward: -132.34, Mean Reward (100): -225.68
+2025-11-03 11:14:03,496 - INFO - Episode 16, Steps: 89, Reward: -263.18, Mean Reward (100): -228.02
+2025-11-03 11:14:05,568 - INFO - Episode 17, Steps: 80, Reward: -332.82, Mean Reward (100): -234.18
+2025-11-03 11:14:07,213 - INFO - Episode 18, Steps: 59, Reward: -70.66, Mean Reward (100): -225.10
+2025-11-03 11:14:09,857 - INFO - Episode 19, Steps: 103, Reward: -106.71, Mean Reward (100): -218.87
+2025-11-03 11:14:11,523 - INFO - Episode 20, Steps: 66, Reward: -98.12, Mean Reward (100): -212.83
+2025-11-03 11:14:14,198 - INFO - Episode 21, Steps: 103, Reward: -171.24, Mean Reward (100): -210.85
+2025-11-03 11:14:16,772 - INFO - Episode 22, Steps: 93, Reward: -261.31, Mean Reward (100): -213.14
+2025-11-03 11:15:35,217 - INFO - 日志系统初始化完成
+2025-11-03 11:15:36,085 - INFO - 开始PPO训练!
+2025-11-03 11:15:36,085 - INFO - 使用设备: cuda
+2025-11-03 11:15:44,289 - INFO - PPO智能体初始化完成: 状态形状=(1, 240, 240), 动作数量=4
+2025-11-03 11:15:47,046 - INFO - Episode 1, Steps: 81, Reward: -138.09, Mean Reward (100): -138.09
+2025-11-03 11:15:48,940 - INFO - Episode 2, Steps: 73, Reward: -78.56, Mean Reward (100): -108.32
+2025-11-03 11:15:51,102 - INFO - Episode 3, Steps: 87, Reward: -118.66, Mean Reward (100): -111.77
+2025-11-03 11:15:54,023 - INFO - Episode 4, Steps: 119, Reward: -145.42, Mean Reward (100): -120.18
+2025-11-03 11:15:56,274 - INFO - Episode 5, Steps: 92, Reward: -390.70, Mean Reward (100): -174.29
+2025-11-03 11:15:58,235 - INFO - Episode 6, Steps: 80, Reward: -167.51, Mean Reward (100): -173.16
+2025-11-03 11:16:00,099 - INFO - Episode 7, Steps: 76, Reward: -260.33, Mean Reward (100): -185.61
+2025-11-03 11:16:02,460 - INFO - Episode 8, Steps: 96, Reward: -259.54, Mean Reward (100): -194.85
+2025-11-03 11:16:04,666 - INFO - Episode 9, Steps: 90, Reward: -260.79, Mean Reward (100): -202.18
+2025-11-03 11:16:06,225 - INFO - Episode 10, Steps: 63, Reward: -121.95, Mean Reward (100): -194.15
+2025-11-03 11:16:08,790 - INFO - Episode 11, Steps: 105, Reward: -188.91, Mean Reward (100): -193.68
+2025-11-03 11:16:11,570 - INFO - Episode 12, Steps: 114, Reward: -237.38, Mean Reward (100): -197.32
+2025-11-03 11:16:13,720 - INFO - Episode 13, Steps: 88, Reward: -225.81, Mean Reward (100): -199.51
+2025-11-03 11:16:15,247 - INFO - Episode 14, Steps: 62, Reward: -141.84, Mean Reward (100): -195.39
+2025-11-03 11:16:17,432 - INFO - Episode 15, Steps: 88, Reward: -131.27, Mean Reward (100): -191.12
+2025-11-03 11:16:19,103 - INFO - Episode 16, Steps: 66, Reward: -154.09, Mean Reward (100): -188.80
+2025-11-03 11:16:20,937 - INFO - Episode 17, Steps: 75, Reward: -93.79, Mean Reward (100): -183.21
+2025-11-03 11:16:23,941 - INFO - Episode 18, Steps: 123, Reward: -219.20, Mean Reward (100): -185.21
+2025-11-03 11:16:26,246 - INFO - Episode 19, Steps: 94, Reward: -155.47, Mean Reward (100): -183.65
+2025-11-03 11:16:28,207 - INFO - Episode 20, Steps: 80, Reward: -85.70, Mean Reward (100): -178.75
+2025-11-03 11:16:30,654 - INFO - Episode 21, Steps: 100, Reward: -56.87, Mean Reward (100): -172.95
+2025-11-03 11:16:32,932 - INFO - Episode 22, Steps: 93, Reward: -132.31, Mean Reward (100): -171.10
+2025-11-03 11:18:16,940 - INFO - 日志系统初始化完成
+2025-11-03 11:18:17,941 - INFO - 开始PPO训练!
+2025-11-03 11:18:17,941 - INFO - 使用设备: cuda
+2025-11-03 11:18:21,526 - INFO - PPO智能体初始化完成: 状态形状=(1, 120, 120), 动作数量=6
+2025-11-03 11:18:45,403 - INFO - Step 2000, Stats: {'policyLoss': np.float64(-0.00017776598235941243), 'entropy': np.float64(1.7917536914348602), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(9.651807718000783e-05), 'ratioMean': np.float64(0.9999095618724823), 'valueLoss': np.float64(0.16381879281252623), 'explainedVariance': np.float64(-2.6571021497249605), 'valueMean': np.float64(-0.1793392612133175), 'returnMean': np.float64(-0.12137042917311192), 'on_policy_update_epochs': 20, 'off_policy_policy_loss': 0.1892223060131073, 'off_policy_value_loss': 0.011140957474708557, 'off_policy_entropy': 1.7917379140853882, 'off_policy_td_error_mean': 0.10555052757263184, 'off_policy_batch_size': 10}
+2025-11-03 11:18:53,777 - INFO - Episode 1, Steps: 3300, Reward: -21.00, Mean Reward (100): -21.00
+2025-11-03 11:19:04,464 - INFO - Step 700, Stats: {'policyLoss': np.float64(-8.774841246905752e-06), 'entropy': np.float64(1.7917293906211853), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-3.308404220661032e-05), 'ratioMean': np.float64(1.0000348210334777), 'valueLoss': np.float64(0.020231797453016044), 'explainedVariance': np.float64(-0.012110373377799988), 'valueMean': np.float64(-0.04519749656319618), 'returnMean': np.float64(-0.05615104865282774), 'on_policy_update_epochs': 20}
+2025-11-03 11:19:29,870 - INFO - 日志系统初始化完成
+2025-11-03 11:19:30,808 - INFO - 开始PPO训练!
+2025-11-03 11:19:30,808 - INFO - 使用设备: cuda
+2025-11-03 11:19:34,258 - INFO - PPO智能体初始化完成: 状态形状=(1, 120, 120), 动作数量=4
+2025-11-03 11:19:36,446 - INFO - Episode 1, Steps: 69, Reward: -84.02, Mean Reward (100): -84.02
+2025-11-03 11:19:38,035 - INFO - Episode 2, Steps: 65, Reward: -69.16, Mean Reward (100): -76.59
+2025-11-03 11:19:39,962 - INFO - Episode 3, Steps: 81, Reward: -238.87, Mean Reward (100): -130.68
+2025-11-03 11:19:42,319 - INFO - Episode 4, Steps: 100, Reward: -260.22, Mean Reward (100): -163.07
+2025-11-03 11:19:44,721 - INFO - Episode 5, Steps: 96, Reward: -78.40, Mean Reward (100): -146.13
+2025-11-03 11:19:47,908 - INFO - Episode 6, Steps: 128, Reward: -221.98, Mean Reward (100): -158.78
+2025-11-03 11:19:49,604 - INFO - Episode 7, Steps: 65, Reward: -186.03, Mean Reward (100): -162.67
+2025-11-03 11:19:52,487 - INFO - Episode 8, Steps: 108, Reward: -237.85, Mean Reward (100): -172.07
+2025-11-03 11:19:55,325 - INFO - Episode 9, Steps: 104, Reward: -76.46, Mean Reward (100): -161.44
+2025-11-03 11:19:57,101 - INFO - Episode 10, Steps: 67, Reward: -103.32, Mean Reward (100): -155.63
+2025-11-03 11:19:59,314 - INFO - Episode 11, Steps: 91, Reward: -89.15, Mean Reward (100): -149.59
+2025-11-03 11:20:02,039 - INFO - Episode 12, Steps: 114, Reward: -396.47, Mean Reward (100): -170.16
+2025-11-03 11:20:05,228 - INFO - Episode 13, Steps: 134, Reward: -147.65, Mean Reward (100): -168.43
+2025-11-03 11:20:07,593 - INFO - Episode 14, Steps: 99, Reward: -139.07, Mean Reward (100): -166.33
+2025-11-03 11:20:09,607 - INFO - Episode 15, Steps: 83, Reward: -402.12, Mean Reward (100): -182.05
+2025-11-03 11:20:11,508 - INFO - Episode 16, Steps: 63, Reward: -105.73, Mean Reward (100): -177.28
+2025-11-03 11:20:14,314 - INFO - Episode 17, Steps: 107, Reward: -201.72, Mean Reward (100): -178.72
+2025-11-03 11:20:16,549 - INFO - Episode 18, Steps: 89, Reward: -283.15, Mean Reward (100): -184.52
+2025-11-03 11:20:18,428 - INFO - Episode 19, Steps: 75, Reward: -86.75, Mean Reward (100): -179.38
+2025-11-03 11:20:21,495 - INFO - Episode 20, Steps: 119, Reward: -178.94, Mean Reward (100): -179.35
+2025-11-03 11:20:23,238 - INFO - Episode 21, Steps: 73, Reward: -124.97, Mean Reward (100): -176.76
+2025-11-03 11:20:35,117 - INFO - Step 70, Stats: {'policyLoss': np.float64(-7.060323083010189e-05), 'entropy': np.float64(1.3862883746623993), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-1.0599166669678083e-06), 'ratioMean': np.float64(1.0000071823596954), 'valueLoss': np.float64(44.99977811574936), 'explainedVariance': np.float64(0.08562718033790588), 'valueMean': np.float64(-2.4949890814255924), 'returnMean': np.float64(-1.2856856286525726), 'on_policy_update_epochs': 20, 'off_policy_policy_loss': -0.991581380367279, 'off_policy_value_loss': 4.045502662658691, 'off_policy_entropy': 1.3862733840942383, 'off_policy_td_error_mean': -0.7173609733581543, 'off_policy_batch_size': 10}
+2025-11-03 11:20:35,366 - INFO - Episode 22, Steps: 80, Reward: -327.32, Mean Reward (100): -183.61
+2025-11-03 11:20:37,828 - INFO - Episode 23, Steps: 100, Reward: -290.28, Mean Reward (100): -188.25
+2025-11-03 11:20:40,217 - INFO - Episode 24, Steps: 97, Reward: -200.64, Mean Reward (100): -188.76
+2025-11-03 11:20:42,117 - INFO - Episode 25, Steps: 73, Reward: -268.78, Mean Reward (100): -191.96
+2025-11-03 11:20:44,303 - INFO - Episode 26, Steps: 76, Reward: -102.77, Mean Reward (100): -188.53
+2025-11-03 11:20:45,871 - INFO - Episode 27, Steps: 63, Reward: -57.86, Mean Reward (100): -183.69
+2025-11-03 11:20:47,336 - INFO - Episode 28, Steps: 60, Reward: -132.56, Mean Reward (100): -181.87
+2025-11-03 11:20:49,802 - INFO - Episode 29, Steps: 102, Reward: -412.53, Mean Reward (100): -189.82
+2025-11-03 11:20:52,736 - INFO - Episode 30, Steps: 111, Reward: -284.37, Mean Reward (100): -192.97
+2025-11-03 11:20:55,224 - INFO - Episode 31, Steps: 95, Reward: -279.03, Mean Reward (100): -195.75
+2025-11-03 11:20:58,177 - INFO - Episode 32, Steps: 119, Reward: -278.13, Mean Reward (100): -198.32
+2025-11-03 11:21:00,622 - INFO - Episode 33, Steps: 101, Reward: -283.74, Mean Reward (100): -200.91
+2025-11-03 11:21:02,733 - INFO - Episode 34, Steps: 87, Reward: -221.39, Mean Reward (100): -201.51
+2025-11-03 11:21:04,807 - INFO - Episode 35, Steps: 85, Reward: -272.17, Mean Reward (100): -203.53
+2025-11-03 11:21:07,292 - INFO - Episode 36, Steps: 100, Reward: -481.95, Mean Reward (100): -211.27
+2025-11-03 11:21:10,076 - INFO - Episode 37, Steps: 117, Reward: -154.51, Mean Reward (100): -209.73
+2025-11-03 11:21:11,873 - INFO - Episode 38, Steps: 76, Reward: -95.55, Mean Reward (100): -206.73
+2025-11-03 11:21:17,019 - INFO - 日志系统初始化完成
+2025-11-03 11:21:17,733 - INFO - 开始PPO训练!
+2025-11-03 11:21:17,734 - INFO - 使用设备: cuda
+2025-11-03 11:21:20,656 - INFO - PPO智能体初始化完成: 状态形状=(1, 120, 120), 动作数量=4
+2025-11-03 11:21:23,726 - INFO - Episode 1, Steps: 96, Reward: -217.12, Mean Reward (100): -217.12
+2025-11-03 11:21:25,806 - INFO - Episode 2, Steps: 84, Reward: -127.53, Mean Reward (100): -172.33
+2025-11-03 11:21:27,960 - INFO - Step 20, Stats: {'policyLoss': np.float64(-0.0003893467117013216), 'entropy': np.float64(1.3862885892391206), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(5.269989220550997e-05), 'ratioMean': np.float64(0.9999530166387558), 'valueLoss': np.float64(7.471850442886352), 'explainedVariance': np.float64(0.005706286430358887), 'valueMean': np.float64(-1.0337518168380484), 'returnMean': np.float64(-0.8557767987251281), 'on_policy_update_epochs': 20, 'off_policy_policy_loss': -1.4870918989181519, 'off_policy_value_loss': 1.6065056324005127, 'off_policy_entropy': 1.3862721920013428, 'off_policy_td_error_mean': -1.0727566480636597, 'off_policy_batch_size': 10}
+2025-11-03 11:21:29,768 - INFO - Episode 3, Steps: 94, Reward: -251.81, Mean Reward (100): -198.82
+2025-11-03 11:21:31,305 - INFO - Episode 4, Steps: 63, Reward: -192.10, Mean Reward (100): -197.14
+2025-11-03 11:21:33,654 - INFO - Step 63, Stats: {'policyLoss': np.float64(-0.0007002735580463159), 'entropy': np.float64(1.3862394571304322), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-0.000616456461011694), 'ratioMean': np.float64(1.000627201795578), 'valueLoss': np.float64(15.185657674074173), 'explainedVariance': np.float64(0.6962017923593521), 'valueMean': np.float64(-4.0698092639446255), 'returnMean': np.float64(-3.7799503803253174), 'on_policy_update_epochs': 20}
+2025-11-03 11:21:34,848 - INFO - Episode 5, Steps: 107, Reward: -31.78, Mean Reward (100): -164.07
+2025-11-03 11:21:37,049 - INFO - Episode 6, Steps: 87, Reward: -306.41, Mean Reward (100): -187.79
+2025-11-03 11:21:39,599 - INFO - Step 69, Stats: {'policyLoss': np.float64(6.203456099633798e-05), 'entropy': np.float64(1.3861604690551759), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(8.192032389615633e-05), 'ratioMean': np.float64(0.9999215960502624), 'valueLoss': np.float64(54.830942487716676), 'explainedVariance': np.float64(0.23079641461372374), 'valueMean': np.float64(-4.396408932097256), 'returnMean': np.float64(-4.616493082046508), 'on_policy_update_epochs': 20}
+2025-11-03 11:21:40,289 - INFO - Episode 7, Steps: 96, Reward: -91.65, Mean Reward (100): -174.06
+2025-11-03 11:21:42,615 - INFO - Episode 8, Steps: 97, Reward: -117.69, Mean Reward (100): -167.01
+2025-11-03 11:21:44,000 - INFO - Episode 9, Steps: 58, Reward: -91.97, Mean Reward (100): -158.67
+2025-11-03 11:21:45,266 - INFO - Step 18, Stats: {'policyLoss': np.float64(-0.00013530582119347656), 'entropy': np.float64(1.3861717879772186), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-8.807527783147862e-05), 'ratioMean': np.float64(1.0000904142856597), 'valueLoss': np.float64(7.927886980772018), 'explainedVariance': np.float64(0.4477979809045792), 'valueMean': np.float64(-1.2183377742767334), 'returnMean': np.float64(-1.1096711099147796), 'on_policy_update_epochs': 20}
+2025-11-03 11:21:46,636 - INFO - Episode 10, Steps: 75, Reward: -119.52, Mean Reward (100): -154.76
+2025-11-03 11:21:49,894 - INFO - Episode 11, Steps: 136, Reward: -11.10, Mean Reward (100): -141.70
+2025-11-03 11:21:50,951 - INFO - Step 7, Stats: {'policyLoss': np.float64(-0.0012909969801548848), 'entropy': np.float64(1.3858828783035277), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(0.00029267855861689893), 'ratioMean': np.float64(0.9997590541839599), 'valueLoss': np.float64(1.4554904267191886), 'explainedVariance': np.float64(0.0398063600063324), 'valueMean': np.float64(-0.322092117741704), 'returnMean': np.float64(-0.21319159418344497), 'on_policy_update_epochs': 20, 'off_policy_policy_loss': -28.008665084838867, 'off_policy_value_loss': 1997.7308349609375, 'off_policy_entropy': 1.3855012655258179, 'off_policy_td_error_mean': -19.644773483276367, 'off_policy_batch_size': 10}
+2025-11-03 11:21:53,150 - INFO - Episode 12, Steps: 90, Reward: -404.57, Mean Reward (100): -163.60
+2025-11-03 11:21:55,299 - INFO - Episode 13, Steps: 85, Reward: -353.66, Mean Reward (100): -178.22
+2025-11-03 11:21:57,073 - INFO - Step 32, Stats: {'policyLoss': np.float64(0.00014810189282434826), 'entropy': np.float64(1.3850099086761474), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-0.0009064355908776633), 'ratioMean': np.float64(1.0009551167488098), 'valueLoss': np.float64(3.9007683396339417), 'explainedVariance': np.float64(-1.100265881419182), 'valueMean': np.float64(-0.9071879485622049), 'returnMean': np.float64(-0.37278181314468384), 'on_policy_update_epochs': 20}
+2025-11-03 11:21:57,776 - INFO - Episode 14, Steps: 59, Reward: -61.47, Mean Reward (100): -169.88
+2025-11-03 11:21:59,764 - INFO - Episode 15, Steps: 82, Reward: -50.76, Mean Reward (100): -161.94
+2025-11-03 11:22:03,057 - INFO - Step 91, Stats: {'policyLoss': np.float64(-0.0008162813935213897), 'entropy': np.float64(1.3844622015953063), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-0.00033297579898317053), 'ratioMean': np.float64(1.0003684639930726), 'valueLoss': np.float64(12.201914167404174), 'explainedVariance': np.float64(0.5566670328378678), 'valueMean': np.float64(-1.7661826699972152), 'returnMean': np.float64(-1.5617022454738616), 'on_policy_update_epochs': 20}
+2025-11-03 11:22:04,041 - INFO - Episode 16, Steps: 127, Reward: -112.12, Mean Reward (100): -158.83
+2025-11-03 11:22:05,737 - INFO - Episode 17, Steps: 68, Reward: -214.05, Mean Reward (100): -162.08
+2025-11-03 11:22:07,318 - INFO - Episode 18, Steps: 64, Reward: -113.78, Mean Reward (100): -159.39
+2025-11-03 11:22:09,136 - INFO - Step 32, Stats: {'policyLoss': np.float64(-0.00035195352889969553), 'entropy': np.float64(1.3836040258407594), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-0.0004815261256226222), 'ratioMean': np.float64(1.0005248010158538), 'valueLoss': np.float64(13.949000215530395), 'explainedVariance': np.float64(0.7323225915431977), 'valueMean': np.float64(-3.8255094051361085), 'returnMean': np.float64(-2.9199010610580443), 'on_policy_update_epochs': 20}
+2025-11-03 11:22:10,799 - INFO - Episode 19, Steps: 96, Reward: -385.81, Mean Reward (100): -171.31
+2025-11-03 11:22:13,138 - INFO - Episode 20, Steps: 93, Reward: -103.33, Mean Reward (100): -167.91
+2025-11-03 11:22:15,180 - INFO - Step 43, Stats: {'policyLoss': np.float64(-0.0010505653540931804), 'entropy': np.float64(1.3844282567501067), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-0.0014624369876401033), 'ratioMean': np.float64(1.0015390157699584), 'valueLoss': np.float64(9.75794808268547), 'explainedVariance': np.float64(0.8082412779331207), 'valueMean': np.float64(-3.326368737220764), 'returnMean': np.float64(-3.4448564052581787), 'on_policy_update_epochs': 20, 'off_policy_policy_loss': -2.7139217853546143, 'off_policy_value_loss': 69.69230651855469, 'off_policy_entropy': 1.3850420713424683, 'off_policy_td_error_mean': -1.9418357610702515, 'off_policy_batch_size': 10}
+2025-11-03 11:22:16,524 - INFO - Episode 21, Steps: 98, Reward: -340.16, Mean Reward (100): -176.11
+2025-11-03 11:22:19,296 - INFO - Episode 22, Steps: 112, Reward: -369.52, Mean Reward (100): -184.91
+2025-11-03 11:22:20,952 - INFO - Step 33, Stats: {'policyLoss': np.float64(-0.00035366072414761974), 'entropy': np.float64(1.385367214679718), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(0.0002040218076444944), 'ratioMean': np.float64(0.9998362481594085), 'valueLoss': np.float64(29.963459575176238), 'explainedVariance': np.float64(0.21970293819904327), 'valueMean': np.float64(-2.4165258476510645), 'returnMean': np.float64(-2.6149144887924196), 'on_policy_update_epochs': 20}
+2025-11-03 11:22:22,162 - INFO - Episode 23, Steps: 82, Reward: -180.23, Mean Reward (100): -184.70
+2025-11-03 11:22:24,348 - INFO - Episode 24, Steps: 90, Reward: -382.63, Mean Reward (100): -192.95
+2025-11-03 11:22:26,800 - INFO - Step 61, Stats: {'policyLoss': np.float64(-0.00011495679242798929), 'entropy': np.float64(1.3857516467571258), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-6.242394346145375e-05), 'ratioMean': np.float64(1.000069946050644), 'valueLoss': np.float64(220.53327674865722), 'explainedVariance': np.float64(-0.27431732416152954), 'valueMean': np.float64(-10.973000380396844), 'returnMean': np.float64(-8.255233669281006), 'on_policy_update_epochs': 20}
+2025-11-03 11:22:27,967 - INFO - Episode 25, Steps: 97, Reward: -276.03, Mean Reward (100): -196.27
+2025-11-03 11:22:30,112 - INFO - Episode 26, Steps: 81, Reward: -252.45, Mean Reward (100): -198.43
+2025-11-03 11:22:33,219 - INFO - Step 83, Stats: {'policyLoss': np.float64(-0.00010325968045208356), 'entropy': np.float64(1.3858233571052552), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(0.00024537857852919843), 'ratioMean': np.float64(0.9997605174779892), 'valueLoss': np.float64(75.05584726333618), 'explainedVariance': np.float64(0.3777663320302963), 'valueMean': np.float64(-7.435819661617279), 'returnMean': np.float64(-7.320866990089416), 'on_policy_update_epochs': 20}
+2025-11-03 11:22:33,609 - INFO - Episode 27, Steps: 99, Reward: -139.88, Mean Reward (100): -196.26
+2025-11-03 11:22:35,656 - INFO - Episode 28, Steps: 86, Reward: -121.87, Mean Reward (100): -193.61
+2025-11-03 11:22:39,294 - INFO - Step 98, Stats: {'policyLoss': np.float64(-1.5658379158978165e-05), 'entropy': np.float64(1.3859418690204621), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-5.201965115020357e-06), 'ratioMean': np.float64(1.0000059813261033), 'valueLoss': np.float64(45.084216833114624), 'explainedVariance': np.float64(0.11805093586444855), 'valueMean': np.float64(-5.124784973263741), 'returnMean': np.float64(-5.082056832313538), 'on_policy_update_epochs': 20, 'off_policy_policy_loss': 10.752881050109863, 'off_policy_value_loss': 108.49938201904297, 'off_policy_entropy': 1.3858550786972046, 'off_policy_td_error_mean': 7.700416564941406, 'off_policy_batch_size': 10}
+2025-11-03 11:22:39,638 - INFO - Episode 29, Steps: 112, Reward: -135.87, Mean Reward (100): -191.62
+2025-11-03 11:22:42,561 - INFO - Episode 30, Steps: 119, Reward: -478.40, Mean Reward (100): -201.18
+2025-11-03 11:22:45,113 - INFO - Step 67, Stats: {'policyLoss': np.float64(-1.582804304574026e-05), 'entropy': np.float64(1.3858612418174743), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(3.267186860966831e-05), 'ratioMean': np.float64(0.9999683052301407), 'valueLoss': np.float64(81.87439403533935), 'explainedVariance': np.float64(0.5755459278821945), 'valueMean': np.float64(-8.843710434436797), 'returnMean': np.float64(-9.338611602783203), 'on_policy_update_epochs': 20}
+2025-11-03 11:22:45,628 - INFO - Episode 31, Steps: 88, Reward: -256.77, Mean Reward (100): -202.97
+2025-11-03 11:22:47,425 - INFO - Episode 32, Steps: 73, Reward: -97.04, Mean Reward (100): -199.66
+2025-11-03 11:22:49,534 - INFO - Episode 33, Steps: 88, Reward: -352.37, Mean Reward (100): -204.29
+2025-11-03 11:22:50,811 - INFO - Step 18, Stats: {'policyLoss': np.float64(-0.00013972031788989092), 'entropy': np.float64(1.3858283936977387), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-0.00018295913318979728), 'ratioMean': np.float64(1.0001848965883255), 'valueLoss': np.float64(14.501583278179169), 'explainedVariance': np.float64(0.3201479732990265), 'valueMean': np.float64(-1.8124393433332444), 'returnMean': np.float64(-1.4062610387802124), 'on_policy_update_epochs': 20}
+2025-11-03 11:22:53,356 - INFO - Episode 34, Steps: 110, Reward: -330.98, Mean Reward (100): -208.01
+2025-11-03 11:22:55,520 - INFO - Episode 35, Steps: 79, Reward: -269.87, Mean Reward (100): -209.78
+2025-11-03 11:22:57,092 - INFO - Step 29, Stats: {'policyLoss': np.float64(-1.9744932898912992e-05), 'entropy': np.float64(1.3859317302703857), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-8.411764811171452e-05), 'ratioMean': np.float64(1.0000857591629029), 'valueLoss': np.float64(4.451937294006347), 'explainedVariance': np.float64(-0.19803834855556487), 'valueMean': np.float64(-0.8319367930293083), 'returnMean': np.float64(-0.7141129404306412), 'on_policy_update_epochs': 20}
+2025-11-03 11:22:58,647 - INFO - Episode 36, Steps: 91, Reward: -109.78, Mean Reward (100): -207.00
+2025-11-03 11:23:00,366 - INFO - Episode 37, Steps: 69, Reward: -163.23, Mean Reward (100): -205.82
+2025-11-03 11:23:02,912 - INFO - Step 69, Stats: {'policyLoss': np.float64(-0.0005340273205874269), 'entropy': np.float64(1.3860089302062988), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-0.0004614996175973829), 'ratioMean': np.float64(1.0004735499620439), 'valueLoss': np.float64(752.2669059753418), 'explainedVariance': np.float64(-0.21889409720897673), 'valueMean': np.float64(-16.219280544435605), 'returnMean': np.float64(-15.93503384590149), 'on_policy_update_epochs': 20, 'off_policy_policy_loss': 26.67276382446289, 'off_policy_value_loss': 873.0145874023438, 'off_policy_entropy': 1.386112928390503, 'off_policy_td_error_mean': 19.21368408203125, 'off_policy_batch_size': 10}
+2025-11-03 11:23:03,792 - INFO - Episode 38, Steps: 106, Reward: -505.43, Mean Reward (100): -213.70
+2025-11-03 11:23:05,583 - INFO - Episode 39, Steps: 75, Reward: -203.92, Mean Reward (100): -213.45
+2025-11-03 11:23:07,201 - INFO - Episode 40, Steps: 68, Reward: -86.21, Mean Reward (100): -210.27
+2025-11-03 11:23:08,514 - INFO - Step 20, Stats: {'policyLoss': np.float64(-0.00024106266338641547), 'entropy': np.float64(1.3861556828022004), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(5.834701591993508e-05), 'ratioMean': np.float64(0.9999510288238526), 'valueLoss': np.float64(17.42872624397278), 'explainedVariance': np.float64(0.5788085967302322), 'valueMean': np.float64(-2.498570078611374), 'returnMean': np.float64(-2.0945122241973877), 'on_policy_update_epochs': 20}
+2025-11-03 11:23:10,303 - INFO - Episode 41, Steps: 95, Reward: -259.61, Mean Reward (100): -211.48
+2025-11-03 11:23:12,829 - INFO - Episode 42, Steps: 106, Reward: -120.43, Mean Reward (100): -209.31
+2025-11-03 11:23:14,121 - INFO - Step 19, Stats: {'policyLoss': np.float64(-0.0004413953073817645), 'entropy': np.float64(1.3861623585224152), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-4.64602697547889e-05), 'ratioMean': np.float64(1.0000531941652298), 'valueLoss': np.float64(6.682294645905495), 'explainedVariance': np.float64(-0.46655267775058745), 'valueMean': np.float64(-0.7808757945895195), 'returnMean': np.float64(-0.6306856334209442), 'on_policy_update_epochs': 20}
+2025-11-03 11:23:15,470 - INFO - Episode 43, Steps: 75, Reward: -88.26, Mean Reward (100): -206.49
+2025-11-03 11:23:17,505 - INFO - Episode 44, Steps: 72, Reward: -228.92, Mean Reward (100): -207.00
+2025-11-03 11:23:20,220 - INFO - Step 72, Stats: {'policyLoss': np.float64(-8.623310719535482e-05), 'entropy': np.float64(1.3861990869045258), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(2.453508931239412e-05), 'ratioMean': np.float64(0.999976459145546), 'valueLoss': np.float64(118.49409770965576), 'explainedVariance': np.float64(0.19546229541301727), 'valueMean': np.float64(-9.865828554332257), 'returnMean': np.float64(-8.28695821762085), 'on_policy_update_epochs': 20}
+2025-11-03 11:23:20,559 - INFO - Episode 45, Steps: 80, Reward: -212.86, Mean Reward (100): -207.13
+2025-11-03 11:23:23,071 - INFO - Episode 46, Steps: 93, Reward: -328.10, Mean Reward (100): -209.76
+2025-11-03 11:23:26,453 - INFO - Step 99, Stats: {'policyLoss': np.float64(-0.0003420613874514089), 'entropy': np.float64(1.3862187266349792), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-0.00031222685429384), 'ratioMean': np.float64(1.0003172218799592), 'valueLoss': np.float64(53.23333711624146), 'explainedVariance': np.float64(0.3056306421756744), 'valueMean': np.float64(-7.040420770645142), 'returnMean': np.float64(-7.902973413467407), 'on_policy_update_epochs': 20, 'off_policy_policy_loss': 2.6109073162078857, 'off_policy_value_loss': 7.445346832275391, 'off_policy_entropy': 1.386202335357666, 'off_policy_td_error_mean': 1.8914426565170288, 'off_policy_batch_size': 10}
+2025-11-03 11:23:27,678 - INFO - Episode 47, Steps: 149, Reward: -334.55, Mean Reward (100): -212.42
+2025-11-03 11:23:29,591 - INFO - Episode 48, Steps: 79, Reward: -93.78, Mean Reward (100): -209.95
+2025-11-03 11:23:32,135 - INFO - Step 71, Stats: {'policyLoss': np.float64(-0.00020722350101278763), 'entropy': np.float64(1.3861576616764069), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(0.0001310199764702702), 'ratioMean': np.float64(0.9998750209808349), 'valueLoss': np.float64(113.64780597686767), 'explainedVariance': np.float64(0.24286264777183533), 'valueMean': np.float64(-9.416143649816513), 'returnMean': np.float64(-8.523755025863647), 'on_policy_update_epochs': 20}
+2025-11-03 11:23:32,688 - INFO - Episode 49, Steps: 94, Reward: -248.55, Mean Reward (100): -210.73
+2025-11-03 11:23:34,168 - INFO - Episode 50, Steps: 62, Reward: -112.11, Mean Reward (100): -208.76
+2025-11-03 11:23:36,621 - INFO - Episode 51, Steps: 103, Reward: -354.56, Mean Reward (100): -211.62
+2025-11-03 11:23:37,748 - INFO - Step 12, Stats: {'policyLoss': np.float64(-0.0002995843216867744), 'entropy': np.float64(1.3861197531223297), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(4.121160406782565e-05), 'ratioMean': np.float64(0.999961593747139), 'valueLoss': np.float64(6.786124821007252), 'explainedVariance': np.float64(-1.8999264240264893), 'valueMean': np.float64(-1.2662749100476502), 'returnMean': np.float64(-0.37226715832948687), 'on_policy_update_epochs': 20}
+2025-11-03 11:23:39,062 - INFO - Episode 52, Steps: 67, Reward: -106.20, Mean Reward (100): -209.59
+2025-11-03 11:23:40,853 - INFO - Episode 53, Steps: 75, Reward: -71.33, Mean Reward (100): -206.98
+2025-11-03 11:23:43,366 - INFO - Step 70, Stats: {'policyLoss': np.float64(-4.948318120145956e-06), 'entropy': np.float64(1.3861477375030518), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-0.00010360693740949501), 'ratioMean': np.float64(1.0001043379306793), 'valueLoss': np.float64(47.56879625320435), 'explainedVariance': np.float64(0.1690034329891205), 'valueMean': np.float64(-6.089822223782539), 'returnMean': np.float64(-5.234995365142822), 'on_policy_update_epochs': 20}
+2025-11-03 11:23:44,306 - INFO - Episode 54, Steps: 99, Reward: -335.23, Mean Reward (100): -209.36
+2025-11-03 11:23:46,867 - INFO - Episode 55, Steps: 104, Reward: -170.79, Mean Reward (100): -208.66
+2025-11-03 11:23:49,341 - INFO - Step 67, Stats: {'policyLoss': np.float64(-0.00011775812131964436), 'entropy': np.float64(1.3861509561538696), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(0.00015929686605886673), 'ratioMean': np.float64(0.9998434752225875), 'valueLoss': np.float64(13.746431732177735), 'explainedVariance': np.float64(0.07214349508285522), 'valueMean': np.float64(0.5112744112499058), 'returnMean': np.float64(0.6836280852556229), 'on_policy_update_epochs': 20, 'off_policy_policy_loss': -3.3184640407562256, 'off_policy_value_loss': 11.864534378051758, 'off_policy_entropy': 1.3861634731292725, 'off_policy_td_error_mean': -2.363813877105713, 'off_policy_batch_size': 10}
+2025-11-03 11:23:49,466 - INFO - Episode 56, Steps: 72, Reward: -90.46, Mean Reward (100): -206.55
+2025-11-03 11:23:51,390 - INFO - Episode 57, Steps: 81, Reward: -161.54, Mean Reward (100): -205.76
+2025-11-03 11:23:53,117 - INFO - Episode 58, Steps: 73, Reward: -139.03, Mean Reward (100): -204.61
+2025-11-03 11:23:54,932 - INFO - Step 41, Stats: {'policyLoss': np.float64(-4.27150739596982e-06), 'entropy': np.float64(1.386146503686905), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-2.554035112325437e-05), 'ratioMean': np.float64(1.0000269711017609), 'valueLoss': np.float64(5.573589181900024), 'explainedVariance': np.float64(0.5512856036424637), 'valueMean': np.float64(-1.606151007115841), 'returnMean': np.float64(-1.5787279605865479), 'on_policy_update_epochs': 20}
+2025-11-03 11:23:56,034 - INFO - Episode 59, Steps: 87, Reward: -95.93, Mean Reward (100): -202.76
+2025-11-03 11:23:58,173 - INFO - Episode 60, Steps: 90, Reward: -337.79, Mean Reward (100): -205.02
+2025-11-03 11:24:00,915 - INFO - Step 64, Stats: {'policyLoss': np.float64(-0.00018501648212261302), 'entropy': np.float64(1.3861463069915771), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(2.2794007733750733e-06), 'ratioMean': np.float64(0.9999990731477737), 'valueLoss': np.float64(10.313133561611176), 'explainedVariance': np.float64(0.4334813326597214), 'valueMean': np.float64(-0.9607470735907555), 'returnMean': np.float64(-0.7734980434179306), 'on_policy_update_epochs': 20}
+2025-11-03 11:24:01,188 - INFO - Episode 61, Steps: 75, Reward: -122.32, Mean Reward (100): -203.66
+2025-11-03 11:24:03,639 - INFO - Episode 62, Steps: 103, Reward: -386.04, Mean Reward (100): -206.60
+2025-11-03 11:24:05,180 - INFO - Episode 63, Steps: 65, Reward: -117.06, Mean Reward (100): -205.18
+2025-11-03 11:24:06,520 - INFO - Step 21, Stats: {'policyLoss': np.float64(-1.0294079242179065e-05), 'entropy': np.float64(1.386185222864151), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-9.723448409602043e-05), 'ratioMean': np.float64(1.0000979334115982), 'valueLoss': np.float64(6.193629395961762), 'explainedVariance': np.float64(0.24474852979183198), 'valueMean': np.float64(-0.72482516951859), 'returnMean': np.float64(-0.9121543437242507), 'on_policy_update_epochs': 20}
+2025-11-03 11:24:07,786 - INFO - Episode 64, Steps: 74, Reward: -88.54, Mean Reward (100): -203.36
+2025-11-03 11:24:09,897 - INFO - Episode 65, Steps: 89, Reward: -197.30, Mean Reward (100): -203.26
+2025-11-03 11:24:12,149 - INFO - Step 58, Stats: {'policyLoss': np.float64(-0.00014266746821167686), 'entropy': np.float64(1.3861904203891755), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(9.039819019562856e-05), 'ratioMean': np.float64(0.9999119848012924), 'valueLoss': np.float64(12.391806280612945), 'explainedVariance': np.float64(0.6704869091510772), 'valueMean': np.float64(-3.0438461005687714), 'returnMean': np.float64(-3.364901542663574), 'on_policy_update_epochs': 20, 'off_policy_policy_loss': -12.681015968322754, 'off_policy_value_loss': 1010.4728393554688, 'off_policy_entropy': 1.3861805200576782, 'off_policy_td_error_mean': -9.002089500427246, 'off_policy_batch_size': 10}
+2025-11-03 11:24:13,660 - INFO - Episode 66, Steps: 118, Reward: -87.18, Mean Reward (100): -201.51
+2025-11-03 11:24:15,623 - INFO - Episode 67, Steps: 69, Reward: -239.95, Mean Reward (100): -202.08
+2025-11-03 11:24:18,164 - INFO - Step 71, Stats: {'policyLoss': np.float64(2.5259792285314832e-05), 'entropy': np.float64(1.386164528131485), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-6.829443382230238e-05), 'ratioMean': np.float64(1.0000687003135682), 'valueLoss': np.float64(22.15847761631012), 'explainedVariance': np.float64(0.17736198604106904), 'valueMean': np.float64(-2.2845111429691314), 'returnMean': np.float64(-1.7595469892024993), 'on_policy_update_epochs': 20}
+2025-11-03 11:24:18,933 - INFO - Episode 68, Steps: 103, Reward: -172.98, Mean Reward (100): -201.65
+2025-11-03 11:24:20,791 - INFO - Episode 69, Steps: 78, Reward: -112.38, Mean Reward (100): -200.36
+2025-11-03 11:24:22,368 - INFO - Episode 70, Steps: 66, Reward: -131.98, Mean Reward (100): -199.38
+2025-11-03 11:24:23,780 - INFO - Step 24, Stats: {'policyLoss': np.float64(-0.0002250441874752873), 'entropy': np.float64(1.3861686885356903), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(3.101193827887982e-05), 'ratioMean': np.float64(0.9999710410833359), 'valueLoss': np.float64(4.51979099214077), 'explainedVariance': np.float64(0.4774938255548477), 'valueMean': np.float64(-1.4603292912244796), 'returnMean': np.float64(-0.9942400574684143), 'on_policy_update_epochs': 20}
+2025-11-03 11:24:24,692 - INFO - Episode 71, Steps: 62, Reward: -89.68, Mean Reward (100): -197.84
+2025-11-03 11:24:27,223 - INFO - Episode 72, Steps: 105, Reward: -116.20, Mean Reward (100): -196.70
+2025-11-03 11:24:29,555 - INFO - Step 57, Stats: {'policyLoss': np.float64(-0.0002466863324627866), 'entropy': np.float64(1.386159348487854), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-3.976455318479566e-05), 'ratioMean': np.float64(1.0000437378883362), 'valueLoss': np.float64(93.66810302734375), 'explainedVariance': np.float64(-0.27992196977138517), 'valueMean': np.float64(-6.811646047607065), 'returnMean': np.float64(-5.107150650024414), 'on_policy_update_epochs': 20}
+2025-11-03 11:24:30,694 - INFO - Episode 73, Steps: 98, Reward: -208.17, Mean Reward (100): -196.86
+2025-11-03 11:24:33,239 - INFO - Episode 74, Steps: 98, Reward: -336.15, Mean Reward (100): -198.74
+2025-11-03 11:24:35,768 - INFO - Step 61, Stats: {'policyLoss': np.float64(-0.0002512843817203958), 'entropy': np.float64(1.3861383855342866), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(8.688768562024052e-05), 'ratioMean': np.float64(0.999915462732315), 'valueLoss': np.float64(24.672035264968873), 'explainedVariance': np.float64(0.5916518568992615), 'valueMean': np.float64(-4.590064024925232), 'returnMean': np.float64(-4.832162880897522), 'on_policy_update_epochs': 20, 'off_policy_policy_loss': 13.707510948181152, 'off_policy_value_loss': 248.2727508544922, 'off_policy_entropy': 1.3861174583435059, 'off_policy_td_error_mean': 9.977446556091309, 'off_policy_batch_size': 10}
+2025-11-03 11:24:37,243 - INFO - Episode 75, Steps: 117, Reward: -336.47, Mean Reward (100): -200.58
+2025-11-03 11:24:39,772 - INFO - Episode 76, Steps: 103, Reward: -232.85, Mean Reward (100): -201.00
+2025-11-03 11:24:41,589 - INFO - Step 41, Stats: {'policyLoss': np.float64(-0.00016154122030638264), 'entropy': np.float64(1.3860820829868317), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(1.6010045646908112e-05), 'ratioMean': np.float64(0.9999870866537094), 'valueLoss': np.float64(8.89006142616272), 'explainedVariance': np.float64(0.16288995742797852), 'valueMean': np.float64(-1.6726170390844346), 'returnMean': np.float64(-0.818008542060852), 'on_policy_update_epochs': 20}
+2025-11-03 11:24:43,548 - INFO - Episode 77, Steps: 122, Reward: -92.38, Mean Reward (100): -199.59
+2025-11-03 11:24:45,888 - INFO - Episode 78, Steps: 86, Reward: -89.10, Mean Reward (100): -198.18
+2025-11-03 11:24:47,512 - INFO - Step 33, Stats: {'policyLoss': np.float64(-1.2980043552524024e-05), 'entropy': np.float64(1.38603777885437), 'clipFraction': np.float64(0.0), 'approxKl': np.float64(-1.048877813332183e-05), 'ratioMean': np.float64(1.0000108748674392), 'valueLoss': np.float64(6.041737484931946), 'explainedVariance': np.float64(0.16219130158424377), 'valueMean': np.float64(-0.9081798501312732), 'returnMean': np.float64(-1.062561297416687), 'on_policy_update_epochs': 20}
