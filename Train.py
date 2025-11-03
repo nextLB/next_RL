@@ -15,7 +15,7 @@ import logging
 import os
 from DQN.DQNTrainer import V1_2_DQNTrainer
 from DQN.DQNAgent import V1_2_DQNAgent
-
+from typing import Tuple
 
 
 def setupLogging():
@@ -41,7 +41,8 @@ class TrainingConfig:
     version: str = "V1.2"
     environmentName: str = "PongNoFrameskip-v4"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    imageSize: int = 120
+    imageShape: Tuple[int, int, int] = (1, 120, 120)
+    numActions: int = 0
 
 
 
@@ -60,13 +61,16 @@ def Train_DQN():
     # 初始化环境类
     if config.environmentName == "PongNoFrameskip-v4":
         environment = PNFSV4Environment(config)
+        config.numActions = environment.actionSpace.n
     else:
         environment = PNFSV4Environment(config)
+        config.numActions = environment.actionSpace.n
 
     # 按照版本号进行后续的流程
     if config.version == "V1.2":
         # 初始化Agent
         DQNAgent = V1_2_DQNAgent(config)
+        print(DQNAgent.policyNetwork)
 
         # 初始化训练类
         DQNTrainer = V1_2_DQNTrainer(environment, DQNAgent, config)

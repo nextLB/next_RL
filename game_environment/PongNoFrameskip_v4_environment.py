@@ -14,7 +14,7 @@ class PNFSV4Environment:
         self.env = gym.make(self.config.environmentName, render_mode='rgb_array')
 
     # 对于Pong游戏的图像帧进行预处理
-    def preprocess_frame(self, frame):
+    def preprocess_frame_to_gray(self, frame):
         # 转换为灰度图
         if len(frame.shape) == 3:
             frame = np.mean(frame, axis=2)  # 使用numpy提高效率
@@ -32,14 +32,14 @@ class PNFSV4Environment:
     # 重置环境并返回预处理后的初始状态帧
     def reset(self):
         state, info = self.env.reset()
-        processedState = self.preprocess_frame(state)
+        processedState = self.preprocess_frame_to_gray(state)
         return processedState, info
 
     # 执行动作并返回预处理后的结果
     def step(self, action):
         nextState, reward, terminated, truncated, info = self.env.step(action)
         done = terminated or truncated
-        processedNextState = self.preprocess_frame(nextState)
+        processedNextState = self.preprocess_frame_to_gray(nextState)
         return processedNextState, reward, done, info
 
     @property
