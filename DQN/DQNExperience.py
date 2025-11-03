@@ -27,17 +27,33 @@ class ExperienceBuffer:
     def sample(self, batchSize: int) -> tuple:
         """从缓冲区中随机采样经验"""
         experiences = random.sample(self.buffer, batchSize)
-        # 使用列表推导式提高效率
-        states = torch.stack([exp.state for exp in experiences])
-        actions = torch.tensor([exp.action for exp in experiences], dtype=torch.long, device=states.device)
-        rewards = torch.tensor([exp.reward for exp in experiences], dtype=torch.float32, device=states.device)
-        nextStates = torch.stack([exp.nextState for exp in experiences])
-        dones = torch.tensor([exp.done for exp in experiences], dtype=torch.float32, device=states.device)
-        return states, actions, rewards, nextStates, dones
 
+        # 批量处理状态
+        states = torch.cat([exp.state for exp in experiences], dim=0).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+        nextStates = torch.cat([exp.nextState for exp in experiences], dim=0).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+        nextStates = torch.unsqueeze(nextStates, 0)
+        nextStates = torch.unsqueeze(nextStates, 0)
+        actions = torch.tensor([exp.action for exp in experiences], dtype=torch.long).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+        rewards = torch.tensor([exp.reward for exp in experiences], dtype=torch.float32).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+        dones = torch.tensor([exp.done for exp in experiences], dtype=torch.float32).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+
+        return states, actions, rewards, nextStates, dones
 
     def __len__(self) -> int:
         return len(self.buffer)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

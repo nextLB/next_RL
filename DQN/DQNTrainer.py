@@ -39,5 +39,31 @@ class V1_2_DQNTrainer:
                 action = self.agent.selectAction(state)
                 nextState, reward, done, info = self.environment.step(action)
                 self.experience.push(state, action, reward, nextState, done)
+                # 优化模型
+                loss = self.agent.optimizeModel(self.experience)
+                if loss > 0:
+                    totalLoss += loss
+                    lossCount += 1
+                print(loss)
+                state = nextState
+                totalReward += reward
+                stepsInEpisode += 1
+
+                if done:
+                    break
+
+            self.agent.episodesCompleted += 1
+
+
+
+
+
+
+
+
+
+
+
+
 
 

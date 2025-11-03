@@ -50,6 +50,8 @@ class TrainingConfig:
     finalEpsilon: float = 0.01
     epsilonDecaySteps: int = 100000
     replayBufferCapacity: int = 10000
+    discountFactor: float = 0.99
+    targetUpdateFrequency: int = 300
 
 
 

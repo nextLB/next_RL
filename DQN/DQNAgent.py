@@ -147,8 +147,6 @@ class V1_2_DQNAgent:
         else:
             return random.randrange(self.config.numActions)
 
-
-
     def _calculateCurrentEpsilon(self) -> float:
         """计算当前的epsilon值"""
         return self.config.finalEpsilon + (self.config.initialEpsilon - self.config.finalEpsilon) * \
@@ -157,6 +155,50 @@ class V1_2_DQNAgent:
     def getCurrentEpsilon(self) -> float:
         """获取当前epsilon值"""
         return self._calculateCurrentEpsilon()
+
+    def optimizeModel(self, experience):
+        # 采样
+        states, actions, rewards, nextStates, dones = experience.sample(1)
+
+        # 计算当前Q值
+        currentQValues = self.policyNetwork(states).gather(1, actions.unsqueeze(1))
+
+        # 计算目标Q值
+        with torch.no_grad():
+            nextQValues = self.targetNetwork(nextStates).max(1)[0]
+            targetQValues = rewards + (self.config.discountFactor * nextQValues * (1 - dones))
+
+        # 计算损失
+        loss = F.smooth_l1_loss(currentQValues.squeeze(), targetQValues)
+
+        # 优化模型
+        self.optimizer.zero_grad()
+        loss.backward()
+
+        # 梯度裁剪
+        torch.nn.utils.clip_grad_norm_(self.policyNetwork.parameters(), 10.0)
+        self.optimizer.step()
+
+        # 定期更新目标网络
+        if self.stepsCompleted % self.config.targetUpdateFrequency == 0:
+            self._updateTargetNetwork()
+
+        return loss.item()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
