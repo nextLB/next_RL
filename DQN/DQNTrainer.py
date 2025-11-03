@@ -3,6 +3,7 @@
 """
 
 import torch
+import numpy as np
 
 
 
@@ -15,6 +16,7 @@ class V1_2_DQNTrainer:
         self.experience = experience
 
     def train(self):
+
 
         # 训练统计
         episodeRewards = []
@@ -44,7 +46,6 @@ class V1_2_DQNTrainer:
                 if loss > 0:
                     totalLoss += loss
                     lossCount += 1
-                print(loss)
                 state = nextState
                 totalReward += reward
                 stepsInEpisode += 1
@@ -54,8 +55,37 @@ class V1_2_DQNTrainer:
 
             self.agent.episodesCompleted += 1
 
+            # 记录统计信息
+            averageLoss = totalLoss / lossCount if lossCount > 0 else 0.0
+            episodeRewards.append(totalReward)
+            episodeLosses.append(averageLoss)
+            epsilonHistory.append(self.agent.getCurrentEpsilon())
 
+            # 计算移动平均奖励
+            if len(episodeRewards) >= 50:
+                movingAverage = np.mean(episodeRewards[-50:])
+            else:
+                movingAverage = np.mean(episodeRewards)
+            movingAverageRewards.append(movingAverage)
 
+            # 更新最佳模型
+            if movingAverage > bestAverageReward and len(episodeRewards) >= 20:
+                bestAverageReward = movingAverage
+                self.agent.saveCheckpoint(
+                    f"./DQN_models/best_model.pth"
+                )
+
+            # 定期日志输出
+            if episode % 5 == 0:
+                stats = self.agent.getTrainingStatistics()
+                print(
+                    f"回合 {episode:4d} | "
+                    f"奖励: {totalReward:7.2f} | "
+                    f"步数: {stepsInEpisode:4d} | "
+                    f"移动平均: {movingAverage:7.2f} | "
+                    f"平均损失: {averageLoss:7.4f} | "
+                    f"Epsilon: {stats['currentEpsilon']:.3f} | "
+                )
 
 
 

@@ -185,7 +185,14 @@ class V1_2_DQNAgent:
 
         return loss.item()
 
+    def getTrainingStatistics(self) -> dict:
+        """获取训练统计信息"""
 
+        return {
+            'stepsCompleted': self.stepsCompleted,
+            'episodesCompleted': self.episodesCompleted,
+            'currentEpsilon': self.getCurrentEpsilon(),
+        }
 
 
 

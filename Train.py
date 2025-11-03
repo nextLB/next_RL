@@ -19,6 +19,7 @@ from DQN.DQNExperience import ExperienceBuffer
 from typing import Tuple
 
 
+
 def setupLogging():
     """配置日志"""
     logDir = './log'
@@ -57,6 +58,7 @@ class TrainingConfig:
 
 # 进行DQN模型的训练
 def Train_DQN():
+    os.makedirs('./RL_models/DQN_models/', exist_ok=True)
     # 创建日志类
     logger = setupLogging()
 
