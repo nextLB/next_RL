@@ -15,6 +15,7 @@ import logging
 import os
 from DQN.DQNTrainer import V1_2_DQNTrainer
 from DQN.DQNAgent import V1_2_DQNAgent
+from DQN.DQNExperience import ExperienceBuffer
 from typing import Tuple
 
 
@@ -43,6 +44,12 @@ class TrainingConfig:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     imageShape: Tuple[int, int, int] = (1, 120, 120)
     numActions: int = 0
+    learningRate: float = 0.00025
+    trainingEpisodes: int = 1000
+    initialEpsilon: float = 1.0
+    finalEpsilon: float = 0.01
+    epsilonDecaySteps: int = 100000
+    replayBufferCapacity: int = 10000
 
 
 
@@ -70,10 +77,15 @@ def Train_DQN():
     if config.version == "V1.2":
         # 初始化Agent
         DQNAgent = V1_2_DQNAgent(config)
-        print(DQNAgent.policyNetwork)
+
+        # 初始化经验池
+        Experience = ExperienceBuffer(config.replayBufferCapacity)
 
         # 初始化训练类
-        DQNTrainer = V1_2_DQNTrainer(environment, DQNAgent, config)
+        DQNTrainer = V1_2_DQNTrainer(environment, DQNAgent,  Experience, config)
+
+        # 开始训练
+        DQNTrainer.train()
 
 
 

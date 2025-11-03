@@ -21,7 +21,7 @@ class PNFSV4Environment:
 
         # 调整大小
         img = Image.fromarray(frame.astype(np.uint8))
-        img = img.resize((self.config.imageSize, self.config.imageSize), Image.BILINEAR)
+        img = img.resize((self.config.imageShape[1], self.config.imageShape[2]), Image.BILINEAR)
         frame = np.array(img)
 
         # 归一化到 [0, 1]
