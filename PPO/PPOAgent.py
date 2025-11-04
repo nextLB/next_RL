@@ -120,7 +120,7 @@ class V1_2_PPOAgent:
     def __init__(self, config):
         self.name = "V1.2_PPOAgent"
         self.config = config
-
+        self.network = PPONetwork(self.config.imageShape, self.config.numActions).to(self.config.device)
 
 
 

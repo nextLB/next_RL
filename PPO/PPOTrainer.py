@@ -21,6 +21,5 @@ class V1_2_PPOTrainer:
         movingAverageRewards = []
         bestAverageReward = -float('inf')
 
-        print(episodeRewards, movingAverageRewards, bestAverageReward)
 
 
