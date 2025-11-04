@@ -10,12 +10,16 @@
 
 from dataclasses import dataclass
 from game_environment.PongNoFrameskip_v4_environment import PNFSV4Environment
+from game_environment.SpaceInvadersNoFrameskip_v4_environment import SINFSV4Environment
 import torch
 import logging
 import os
 from DQN.DQNTrainer import V1_2_DQNTrainer
 from DQN.DQNAgent import V1_2_DQNAgent
 from DQN.DQNExperience import ExperienceBuffer
+from PPO.PPOTrainer import V1_2_PPOTrainer
+from PPO.PPOExperience import PPOExperienceBuffer
+from PPO.PPOAgent import V1_2_PPOAgent
 from typing import Tuple
 
 
@@ -41,19 +45,30 @@ def setupLogging():
 class TrainingConfig:
     """训练配置参数"""
     version: str = "V1.2"
-    environmentName: str = "PongNoFrameskip-v4"
+    # environmentName: str = "PongNoFrameskip-v4"
+    environmentName: str = "SpaceInvadersNoFrameskip-v4"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     imageShape: Tuple[int, int, int] = (1, 120, 120)
     numActions: int = 0
     learningRate: float = 0.00025
     trainingEpisodes: int = 1000
+
+    # 下面这些参数主要是DQN的
     initialEpsilon: float = 1.0
     finalEpsilon: float = 0.01
-    epsilonDecaySteps: int = 1000000
+    epsilonDecaySteps: int = 10000000
     replayBufferCapacity: int = 10000
     discountFactor: float = 0.99
     targetUpdateFrequency: int = 300
 
+    # 下面这些参数是PPO算法中特有的
+    gamma: float = 0.99
+    gaeLambda: float = 0.95
+    clipEpsilon: float = 0.2
+    valueCoefficient: float = 0.2
+    entropyCoefficient: float = 0.01
+    ppoEpochs: int = 4
+    miniBatchSize: int = 32
 
 
 # 进行DQN模型的训练
@@ -95,9 +110,56 @@ def Train_DQN():
 
 
 
+# 进行PPO模型的训练
+def Train_PPO():
+    os.makedirs('./RL_models/PPO_models/', exist_ok=True)
+    # 创建日志类
+    logger = setupLogging()
+
+    # 创建配置类
+    config = TrainingConfig()
+
+    # 设置内存优化
+    if torch.cuda.is_available():
+        torch.backends.cudnn.benchmark = True
+
+    # 初始化环境类
+    if config.environmentName == "PongNoFrameskip-v4":
+        environment = PNFSV4Environment(config)
+        config.numActions = environment.actionSpace.n
+    elif config.environmentName == "SpaceInvadersNoFrameskip-v4":
+        environment = SINFSV4Environment(config)
+        config.numActions = environment.actionSpace.n
+    else:
+        environment = PNFSV4Environment(config)
+        config.numActions = environment.actionSpace.n
+
+    # 按照版本号进行后续的流程
+    if config.version == "V1.2":
+        # 初始化Agent
+        PPOAgent = V1_2_PPOAgent(config)
+
+        # 初始化经验池
+        Experience = PPOExperienceBuffer()
+
+        # 初始化训练类
+        PPOTrainer = V1_2_PPOTrainer(environment, PPOAgent,  Experience, config)
+
+        # 开始训练
+        PPOTrainer.train()
+
+
+
+
+
+
+
+
 def main():
-    # 进行DQN模型的训练
-    Train_DQN()
+    # # 进行DQN模型的训练
+    # Train_DQN()
+    # 进行PPO模型的训练
+    Train_PPO()
 
 
 

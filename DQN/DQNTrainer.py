@@ -49,7 +49,7 @@ class V1_2_DQNTrainer:
                     # 优化模型
                     loss = self.agent.optimizeModel(self.experience)
 
-
+                # 统计信息与数据
                 totalLoss += loss
                 lossCount += 1
                 state = nextState
