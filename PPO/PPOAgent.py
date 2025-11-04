@@ -121,7 +121,16 @@ class V1_2_PPOAgent:
         self.name = "V1.2_PPOAgent"
         self.config = config
         self.network = PPONetwork(self.config.imageShape, self.config.numActions).to(self.config.device)
+        # 优化器
+        self.optimizer = optim.Adam(
+            self.network.parameters(),
+            lr=self.config.learningRate,
+            eps=1e-5
+        )
 
+        # 训练状态
+        self.stepsCompleted = 0
+        self.episodesCompleted = 0
 
 
 
