@@ -156,10 +156,10 @@ def Train_PPO():
 
 
 def main():
-    # # 进行DQN模型的训练
-    # Train_DQN()
-    # 进行PPO模型的训练
-    Train_PPO()
+    # 进行DQN模型的训练
+    Train_DQN()
+    # # 进行PPO模型的训练
+    # Train_PPO()
 
 
 
