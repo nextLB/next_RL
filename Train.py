@@ -33,7 +33,7 @@ def setupLogging():
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
-            logging.FileHandler(os.path.join(logDir, 'DQNTrain.log'), mode='w'),
+            logging.FileHandler(os.path.join(logDir, 'PPOTrain.log'), mode='w'),
             logging.StreamHandler()
         ]
     )
@@ -156,10 +156,10 @@ def Train_PPO():
 
 
 def main():
-    # 进行DQN模型的训练
-    Train_DQN()
-    # # 进行PPO模型的训练
-    # Train_PPO()
+    # # 进行DQN模型的训练
+    # Train_DQN()
+    # 进行PPO模型的训练
+    Train_PPO()
 
 
 
