@@ -106,6 +106,19 @@ def Train_DQN():
         # 开始训练
         DQNTrainer.train()
 
+    else:
+        # 初始化Agent
+        DQNAgent = V1_2_DQNAgent(config)
+
+        # 初始化经验池
+        Experience = ExperienceBuffer(config.replayBufferCapacity)
+
+        # 初始化训练类
+        DQNTrainer = V1_2_DQNTrainer(environment, DQNAgent,  Experience, config)
+
+        # 开始训练
+        DQNTrainer.train()
+
 
 
 
@@ -136,6 +149,19 @@ def Train_PPO():
 
     # 按照版本号进行后续的流程
     if config.version == "V1.2":
+        # 初始化Agent
+        PPOAgent = V1_2_PPOAgent(config)
+
+        # 初始化经验池
+        Experience = PPOExperienceBuffer()
+
+        # 初始化训练类
+        PPOTrainer = V1_2_PPOTrainer(environment, PPOAgent,  Experience, config)
+
+        # 开始训练
+        PPOTrainer.train()
+
+    else:
         # 初始化Agent
         PPOAgent = V1_2_PPOAgent(config)
 

@@ -2,6 +2,12 @@
     关于PongNoFrameskip-v4这个游戏环境的搭建程序文件
 """
 
+# 请注意！！！！！！！！！！！！！！！！！！！！
+# 在Pong游戏训练的过程中，每赢一球得+1分，输一球得-1分  所以最初的训练奖励值是在-20左右徘徊
+
+
+
+
 import numpy as np
 from PIL import Image
 import gymnasium as gym
@@ -53,12 +59,6 @@ class PNFSV4Environment:
     def close(self) -> None:
         """关闭环境"""
         self.env.close()
-
-
-
-
-
-
 
 
 

@@ -16,6 +16,9 @@ class V1_2_PPOTrainer:
         self.logger = logging.getLogger(__name__)
 
     def train(self):
+        # 在训练开始前记录一下数据看
+        self.environment.record_random_episodes(num_episodes=3, output_dir="./game_environment/visual/space_invaders/", max_steps=500)
+
         # 训练统计
         episodeRewards = []
         movingAverageRewards = []
@@ -43,6 +46,7 @@ class V1_2_PPOTrainer:
                 nextState, reward, done, info = self.environment.step(action)
 
                 # 存储经验
+                state = torch.squeeze(state, 0)
                 self.experienceBuffer.push(state.cpu(), action, reward, done, value, logProb)
 
                 state = nextState
@@ -100,7 +104,7 @@ class V1_2_PPOTrainer:
             # 保存最佳模型
             if movingAverage > bestAverageReward:
                 bestAverageReward = movingAverage
-                self.agent.save_checkpoint(f"./RL_models/PPO_models/best_model.pth")
+                self.agent.save_check_point(f"./RL_models/PPO_models/best_model.pth")
                 self.logger.info(f"新的最佳模型已保存，平均奖励: {bestAverageReward:.2f}")
 
             # 定期日志输出
