@@ -62,6 +62,7 @@ class TrainingConfig:
     targetUpdateFrequency: int = 1000000
     tau: int = 0.01  # 软更新参数
     max_grad_norm: float = 20.0
+    lr_decay_steps: int = 10000
 
     # 下面这些参数是PPO算法中特有的
     gamma: float = 0.99

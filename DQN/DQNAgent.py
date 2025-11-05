@@ -128,7 +128,7 @@ class V1_2_DQNAgent:
         # 学习率调度器
         self.scheduler = optim.lr_scheduler.StepLR(
             self.optimizer,
-            step_size=10000,
+            step_size=self.config.lr_decay_steps,
             gamma=0.5
         )
 
@@ -197,7 +197,7 @@ class V1_2_DQNAgent:
 
             # 计算目标Q值
             target_q_values = rewards + (self.config.discountFactor * next_q_values * (1 - dones))
-            
+
         # 4. 计算当前Q值
         current_q_values = self.policyNetwork(states).gather(1, actions.unsqueeze(1)).squeeze()
 
