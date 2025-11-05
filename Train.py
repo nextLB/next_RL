@@ -50,16 +50,16 @@ class TrainingConfig:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     imageShape: Tuple[int, int, int] = (1, 120, 120)
     numActions: int = 0
-    learningRate: float = 0.00025
+    learningRate: float = 0.0001
     trainingEpisodes: int = 1000
 
     # 下面这些参数主要是DQN的
     initialEpsilon: float = 1.0
-    finalEpsilon: float = 0.01
-    epsilonDecaySteps: int = 10000000
-    replayBufferCapacity: int = 10000
+    finalEpsilon: float = 0.1
+    epsilonDecaySteps: int = 50000
+    replayBufferCapacity: int = 50000
     discountFactor: float = 0.99
-    targetUpdateFrequency: int = 300
+    targetUpdateFrequency: int = 1000
 
     # 下面这些参数是PPO算法中特有的
     gamma: float = 0.99
