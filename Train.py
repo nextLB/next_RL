@@ -45,8 +45,8 @@ def setupLogging():
 class TrainingConfig:
     """训练配置参数"""
     version: str = "V1.2"
-    # environmentName: str = "PongNoFrameskip-v4"
-    environmentName: str = "SpaceInvadersNoFrameskip-v4"
+    environmentName: str = "PongNoFrameskip-v4"
+    # environmentName: str = "SpaceInvadersNoFrameskip-v4"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     imageShape: Tuple[int, int, int] = (1, 120, 120)
     numActions: int = 0
@@ -57,9 +57,10 @@ class TrainingConfig:
     initialEpsilon: float = 1.0
     finalEpsilon: float = 0.1
     epsilonDecaySteps: int = 50000
-    replayBufferCapacity: int = 50000
+    replayBufferCapacity: int = 20000
     discountFactor: float = 0.99
-    targetUpdateFrequency: int = 1000
+    targetUpdateFrequency: int = 1000000
+    tau: int = 0.01  # 软更新参数
 
     # 下面这些参数是PPO算法中特有的
     gamma: float = 0.99
@@ -182,10 +183,10 @@ def Train_PPO():
 
 
 def main():
-    # # 进行DQN模型的训练
-    # Train_DQN()
-    # 进行PPO模型的训练
-    Train_PPO()
+    # 进行DQN模型的训练
+    Train_DQN()
+    # # 进行PPO模型的训练
+    # Train_PPO()
 
 
 

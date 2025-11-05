@@ -122,17 +122,38 @@ class V1_2_DQNAgent:
         self.optimizer = optim.Adam(
             self.policyNetwork.parameters(),
             lr=self.config.learningRate,
-            eps=1e-4
+            eps=1e-4,
+            weight_decay=1e-5  # 添加L2正则化
         )
+        # 学习率调度器
+        self.scheduler = optim.lr_scheduler.StepLR(
+            self.optimizer,
+            step_size=10000,
+            gamma=0.5
+        )
+
 
         # 训练状态
         self.stepsCompleted = 0
         self.episodesCompleted = 0
 
+        # 用于Double DQN
+        self.last_loss = 0.0
+
 
     def _updateTargetNetwork(self) -> None:
         """更新目标网络参数"""
+        # 硬更新
         self.targetNetwork.load_state_dict(self.policyNetwork.state_dict())
+
+        # 或者使用软更新（更稳定）
+        target_net_state_dict = self.targetNetwork.state_dict()
+        policy_net_state_dict = self.policyNetwork.state_dict()
+
+        for key in policy_net_state_dict:
+            target_net_state_dict[key] = policy_net_state_dict[key] * self.config.tau + \
+                                         target_net_state_dict[key] * (1 - self.config.tau)
+        self.targetNetwork.load_state_dict(target_net_state_dict)
 
 
     def selectAction(self, state):
@@ -158,32 +179,52 @@ class V1_2_DQNAgent:
 
     def optimizeModel(self, experience):
         # 采样
-        states, actions, rewards, nextStates, dones = experience.sample(1)
+        states, actions, rewards, next_states, dones = experience.sample(1)
 
-        # 计算当前Q值
-        currentQValues = self.policyNetwork(states).gather(1, actions.unsqueeze(1))
+        # 2. 转换为张量并确保正确形状
+        states = torch.FloatTensor(states).to(self.config.device)
+        actions = torch.LongTensor(actions).to(self.config.device)
+        rewards = torch.FloatTensor(rewards).to(self.config.device)
+        next_states = torch.FloatTensor(next_states).to(self.config.device)
+        dones = torch.BoolTensor(dones).to(self.config.device)
 
-        # 计算目标Q值
+        # 3. 实现Double DQN（减少Q值高估）
         with torch.no_grad():
-            nextQValues = self.targetNetwork(nextStates).max(1)[0]
-            targetQValues = rewards + (self.config.discountFactor * nextQValues * (1 - dones))
+            # 使用policy网络选择动作
+            next_actions = self.policyNetwork(next_states).max(1)[1]
+            # 使用target网络评估Q值
+            next_q_values = self.targetNetwork(next_states).gather(1, next_actions.unsqueeze(1)).squeeze()
 
-        # 计算损失
-        loss = F.smooth_l1_loss(currentQValues.squeeze(), targetQValues)
+            # 计算目标Q值
+            target_q_values = rewards + (self.config.discountFactor * next_q_values * ~dones)
 
-        # 优化模型
+        # 4. 计算当前Q值
+        current_q_values = self.policyNetwork(states).gather(1, actions.unsqueeze(1)).squeeze()
+
+        # 5. 计算损失 - 使用Huber loss提高稳定性
+        loss = F.smooth_l1_loss(current_q_values, target_q_values)
+
+        # 6. 反向传播
         self.optimizer.zero_grad()
         loss.backward()
 
-        # 梯度裁剪
-        torch.nn.utils.clip_grad_norm_(self.policyNetwork.parameters(), 10.0)
+        # 7. 梯度裁剪
+        torch.nn.utils.clip_grad_norm_(self.policyNetwork.parameters(), self.config.max_grad_norm)
+
+        # 8. 优化步骤
         self.optimizer.step()
 
-        # 定期更新目标网络
+        # 9. 定期更新目标网络
         if self.stepsCompleted % self.config.targetUpdateFrequency == 0:
             self._updateTargetNetwork()
 
+        # 10. 更新学习率
+        if self.stepsCompleted % self.config.lr_decay_steps == 0:
+            self.scheduler.step()
+
+        self.last_loss = loss.item()
         return loss.item()
+
 
     def getTrainingStatistics(self) -> dict:
         """获取训练统计信息"""
