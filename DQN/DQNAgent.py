@@ -182,31 +182,11 @@ class V1_2_DQNAgent:
         states, actions, rewards, next_states, dones = experience.sample(1)
 
         # 2. 确保数据在正确的设备和数据类型上
-        # 检查数据是否已经是张量，如果不是则转换
-        if not isinstance(states, torch.Tensor):
-            states = torch.FloatTensor(states).to(self.config.device)
-        else:
-            states = states.to(self.config.device)
-
-        if not isinstance(actions, torch.Tensor):
-            actions = torch.LongTensor(actions).to(self.config.device)
-        else:
-            actions = actions.to(self.config.device)
-
-        if not isinstance(rewards, torch.Tensor):
-            rewards = torch.FloatTensor(rewards).to(self.config.device)
-        else:
-            rewards = rewards.to(self.config.device)
-
-        if not isinstance(next_states, torch.Tensor):
-            next_states = torch.FloatTensor(next_states).to(self.config.device)
-        else:
-            next_states = next_states.to(self.config.device)
-
-        if not isinstance(dones, torch.Tensor):
-            dones = torch.BoolTensor(dones).to(self.config.device)
-        else:
-            dones = dones.to(self.config.device)
+        states = torch.as_tensor(states, dtype=torch.float32, device=self.config.device)
+        actions = torch.as_tensor(actions, dtype=torch.long, device=self.config.device)
+        rewards = torch.as_tensor(rewards, dtype=torch.float32, device=self.config.device)
+        next_states = torch.as_tensor(next_states, dtype=torch.float32, device=self.config.device)
+        dones = torch.as_tensor(dones, dtype=torch.float32, device=self.config.device)
 
         # 3. 实现Double DQN（减少Q值高估）
         with torch.no_grad():
@@ -216,8 +196,8 @@ class V1_2_DQNAgent:
             next_q_values = self.targetNetwork(next_states).gather(1, next_actions.unsqueeze(1)).squeeze()
 
             # 计算目标Q值
-            target_q_values = rewards + (self.config.discountFactor * next_q_values * ~dones)
-
+            target_q_values = rewards + (self.config.discountFactor * next_q_values * (1 - dones))
+            
         # 4. 计算当前Q值
         current_q_values = self.policyNetwork(states).gather(1, actions.unsqueeze(1)).squeeze()
 
