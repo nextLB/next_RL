@@ -181,12 +181,32 @@ class V1_2_DQNAgent:
         # 采样
         states, actions, rewards, next_states, dones = experience.sample(1)
 
-        # 2. 转换为张量并确保正确形状
-        states = torch.FloatTensor(states).to(self.config.device)
-        actions = torch.LongTensor(actions).to(self.config.device)
-        rewards = torch.FloatTensor(rewards).to(self.config.device)
-        next_states = torch.FloatTensor(next_states).to(self.config.device)
-        dones = torch.BoolTensor(dones).to(self.config.device)
+        # 2. 确保数据在正确的设备和数据类型上
+        # 检查数据是否已经是张量，如果不是则转换
+        if not isinstance(states, torch.Tensor):
+            states = torch.FloatTensor(states).to(self.config.device)
+        else:
+            states = states.to(self.config.device)
+
+        if not isinstance(actions, torch.Tensor):
+            actions = torch.LongTensor(actions).to(self.config.device)
+        else:
+            actions = actions.to(self.config.device)
+
+        if not isinstance(rewards, torch.Tensor):
+            rewards = torch.FloatTensor(rewards).to(self.config.device)
+        else:
+            rewards = rewards.to(self.config.device)
+
+        if not isinstance(next_states, torch.Tensor):
+            next_states = torch.FloatTensor(next_states).to(self.config.device)
+        else:
+            next_states = next_states.to(self.config.device)
+
+        if not isinstance(dones, torch.Tensor):
+            dones = torch.BoolTensor(dones).to(self.config.device)
+        else:
+            dones = dones.to(self.config.device)
 
         # 3. 实现Double DQN（减少Q值高估）
         with torch.no_grad():

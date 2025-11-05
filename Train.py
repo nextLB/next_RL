@@ -61,6 +61,7 @@ class TrainingConfig:
     discountFactor: float = 0.99
     targetUpdateFrequency: int = 1000000
     tau: int = 0.01  # 软更新参数
+    max_grad_norm: float = 20.0
 
     # 下面这些参数是PPO算法中特有的
     gamma: float = 0.99
